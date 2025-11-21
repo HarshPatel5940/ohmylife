@@ -5,10 +5,10 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
 import { count } from "drizzle-orm";
 
-export const runtime = "edge";
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext({ async: true });
     const db = getDb(env);
 
 

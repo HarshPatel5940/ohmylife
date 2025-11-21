@@ -4,10 +4,11 @@ import { getDb } from "@/lib/db";
 import { clients, projects, transactions, users } from "@/db/schema";
 import { count, desc, eq, sql } from "drizzle-orm";
 
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
 

@@ -11,7 +11,7 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const clientId = parseInt(params.id);
 
@@ -36,7 +36,7 @@ export async function PATCH(
 ) {
     try {
         const { name, email, company, phone } = await request.json() as any;
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const clientId = parseInt(params.id);
 
@@ -63,7 +63,7 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const clientId = parseInt(params.id);
 

@@ -11,7 +11,7 @@ export async function GET(
 ) {
     try {
         const projectId = parseInt(params.id);
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const teamMembers = await db.select()
@@ -37,7 +37,7 @@ export async function POST(
             return NextResponse.json({ error: "Person ID is required" }, { status: 400 });
         }
 
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const updatedPerson = await db.update(people)

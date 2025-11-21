@@ -11,7 +11,7 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const projectId = parseInt(params.id);
 
@@ -44,7 +44,7 @@ export async function POST(
 ) {
     try {
         const { content } = await request.json() as any;
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const projectId = parseInt(params.id);
 

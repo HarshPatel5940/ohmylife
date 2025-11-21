@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
         }
 
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const passwordHash = await hashPassword(password);

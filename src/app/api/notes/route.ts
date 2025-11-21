@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const allNotes = await db.select({
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Content is required" }, { status: 400 });
         }
 
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const newNote = await db.insert(notes).values({

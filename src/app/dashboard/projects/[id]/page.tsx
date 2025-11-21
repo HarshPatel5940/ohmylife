@@ -178,7 +178,7 @@ export default function ProjectDetailsPage() {
             }
         };
 
-    }, [activeTab, id]);
+    }, [activeTab, id, socket]);
 
 
     useEffect(() => {

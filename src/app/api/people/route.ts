@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const allPeople = await db.select().from(people).where(isNull(people.deletedAt)).orderBy(desc(people.createdAt));
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Name is required" }, { status: 400 });
         }
 
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const newPerson = await db.insert(people).values({

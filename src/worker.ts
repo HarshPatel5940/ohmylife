@@ -1,9 +1,10 @@
 // @ts-ignore
 import { default as handler } from "../.open-next/worker.js";
-import { ChatRoom } from "./workers/chat/ChatRoom";
 
-export default {
-    fetch: handler.fetch,
+const worker = {
+    async fetch(request: Request, env: any, ctx: any) {
+        return handler.fetch(request, env, ctx);
+    }
 };
 
-export { ChatRoom };
+export default worker;

@@ -1,4 +1,4 @@
-import { ChatRoom } from "./ChatRoom";
+import { ChatRoom } from "../../do/ChatRoom";
 
 export { ChatRoom };
 

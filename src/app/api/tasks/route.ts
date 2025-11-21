@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const url = new URL(request.url);
         const projectId = url.searchParams.get("projectId");
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Title is required" }, { status: 400 });
         }
 
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
 
         const newTask = await db.insert(tasks).values({

@@ -10,7 +10,7 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const projectId = parseInt(params.id);
 

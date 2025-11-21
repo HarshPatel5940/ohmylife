@@ -20,14 +20,8 @@
 		{
 			"binding": "DB",
 			"database_name": "ohmylife-db",
-			"database_id": "e1767281-4dc8-4c7a-adcf-75cffeabaa35",
+			"database_id": "45d9f231-6e99-4b87-93b9-299051d5bee0",
 			"migrations_dir": "drizzle"
-		},
-		{
-			"binding": "ohmylife_db",
-			"database_name": "ohmylife-db",
-			"database_id": "e1767281-4dc8-4c7a-adcf-75cffeabaa35",
-			"remote": true
 		}
 	],
 	"r2_buckets": [
@@ -45,20 +39,18 @@
 			"remote": true
 		}
 	],
-	"durable_objects": {
-		"bindings": [
-			{
-				"name": "CHAT_ROOM",
-				"class_name": "ChatRoom"
-			}
-		]
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"invocation_logs": true,
+			"persist": true
+		}
 	},
-	"migrations": [
+	"services": [
 		{
-			"tag": "v1",
-			"new_sqlite_classes": [
-				"ChatRoom"
-			]
+			"binding": "CHAT_ROOM",
+			"service": "ohmylife-chat"
 		}
 	]
 }

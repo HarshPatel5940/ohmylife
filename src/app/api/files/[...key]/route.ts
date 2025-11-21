@@ -8,7 +8,7 @@ export async function GET(
 ) {
     try {
         const key = params.key.join("/");
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
 
         const object = await env.BUCKET.get(key);
 

@@ -13,7 +13,7 @@ export async function PATCH(
         const body = await request.json() as any;
         const { type, description, amount, category, clientId, invoiceNumber, status, dueDate, amountReceived, personId, paymentMethod } = body;
 
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const transactionId = parseInt(params.id);
 
@@ -54,7 +54,7 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { env } = getCloudflareContext();
+        const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const transactionId = parseInt(params.id);
 
