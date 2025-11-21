@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Calendar, Edit2, Trash2, User, Search, MoreVertical, Building2, DollarSign, Mail, Phone } from "lucide-react";
@@ -57,6 +58,7 @@ interface Person {
 }
 
 export default function ProjectsPage() {
+    const router = useRouter();
     const [projects, setProjects] = useState<Project[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
@@ -325,10 +327,8 @@ export default function ProjectsPage() {
                                 </Button>
                             )}
                             {activeTab === "projects" && (
-                                <Button asChild>
-                                    <Link href="/dashboard/projects/new">
-                                        <Plus className="mr-2 h-4 w-4" /> Add Project
-                                    </Link>
+                                <Button onClick={() => router.push('/dashboard/projects/new')}>
+                                    <Plus className="mr-2 h-4 w-4" /> Add Project
                                 </Button>
                             )}
                             {activeTab === "people" && (
@@ -726,10 +726,8 @@ export default function ProjectsPage() {
                             <TabsContent value="projects" className="space-y-4 pt-4">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-lg font-medium">Client Projects</h3>
-                                    <Button asChild size="sm">
-                                        <Link href={`/dashboard/projects/new?clientId=${editingClient.id}`}>
-                                            <Plus className="mr-2 h-4 w-4" /> New Project
-                                        </Link>
+                                    <Button size="sm" onClick={() => router.push(`/dashboard/projects/new?clientId=${editingClient.id}`)}>
+                                        <Plus className="mr-2 h-4 w-4" /> New Project
                                     </Button>
                                 </div>
                                 <div className="space-y-2">

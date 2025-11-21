@@ -337,9 +337,6 @@ export default function SalesPage() {
                 setOpen(val);
                 if (!val) resetForm();
             }}>
-                <DialogTrigger asChild>
-                    <div style={{ display: 'none' }} />
-                </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle>{editingSale ? "Edit Transaction" : "Record New Transaction"}</DialogTitle>
