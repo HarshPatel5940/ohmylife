@@ -1,7 +1,13 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "ohmylife",
-	"main": ".open-next/worker.js",
+	"main": "src/worker.ts",
+	"routes": [
+		{
+			"pattern": "oml.harshnpatel.in",
+			"custom_domain": true
+		}
+	],
 	"compatibility_date": "2024-11-01",
 	"compatibility_flags": [
 		"nodejs_compat"
@@ -28,15 +34,31 @@
 		{
 			"binding": "BUCKET",
 			"bucket_name": "ohmylife-files"
+		},
+		{
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "ohmylife-files"
+		},
+		{
+			"bucket_name": "ohmylife-files",
+			"binding": "ohmylife_files",
+			"remote": true
 		}
 	],
 	"durable_objects": {
 		"bindings": [
 			{
 				"name": "CHAT_ROOM",
-				"class_name": "ChatRoom",
-				"script_name": "ohmylife-chat"
+				"class_name": "ChatRoom"
 			}
 		]
-	}
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"ChatRoom"
+			]
+		}
+	]
 }
