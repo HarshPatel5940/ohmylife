@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { generalTasks } from "@/db/schema";
+import { tasks } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -11,20 +11,21 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { title, priority, status, dueDate } = await request.json() as any;
+        const { title, priority, status, dueDate, assigneeId } = await request.json() as any;
         const { env } = getCloudflareContext();
         const db = getDb(env);
         const taskId = parseInt(params.id);
 
-        const updatedTask = await db.update(generalTasks)
+        const updatedTask = await db.update(tasks)
             .set({
                 title,
                 priority,
                 status,
                 dueDate: dueDate ? new Date(dueDate) : null,
+                assigneeId: assigneeId ? parseInt(assigneeId) : null,
                 updatedAt: new Date(),
             })
-            .where(eq(generalTasks.id, taskId))
+            .where(eq(tasks.id, taskId))
             .returning();
 
         return NextResponse.json(updatedTask[0]);
@@ -43,9 +44,9 @@ export async function DELETE(
         const db = getDb(env);
         const taskId = parseInt(params.id);
 
-        await db.update(generalTasks)
+        await db.update(tasks)
             .set({ deletedAt: new Date() })
-            .where(eq(generalTasks.id, taskId));
+            .where(eq(tasks.id, taskId));
 
         return NextResponse.json({ success: true });
     } catch (error) {

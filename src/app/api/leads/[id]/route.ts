@@ -11,17 +11,18 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { clientId, status, value, source } = await request.json() as any;
+        const { name, contactMode, description, status, value } = await request.json() as any;
         const { env } = getCloudflareContext();
         const db = getDb(env);
         const leadId = parseInt(params.id);
 
         const updatedLead = await db.update(leads)
             .set({
-                clientId: clientId ? parseInt(clientId) : null,
+                name,
+                contactMode,
+                description,
                 status,
                 value: value ? parseInt(value) : null,
-                source,
                 updatedAt: new Date(),
             })
             .where(eq(leads.id, leadId))

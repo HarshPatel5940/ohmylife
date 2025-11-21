@@ -16,6 +16,28 @@ export const users = sqliteTable("users", {
     ...timestamps,
 });
 
+export const clients = sqliteTable("clients", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    email: text("email"),
+    phone: text("phone"),
+    company: text("company"),
+    address: text("address"),
+    ...timestamps,
+});
+
+export const people = sqliteTable("people", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    role: text("role"),
+    email: text("email"),
+    phone: text("phone"),
+    status: text("status", { enum: ["hiring", "active", "inactive", "terminated"] }).default("hiring").notNull(),
+    hourlyRate: integer("hourly_rate"),
+    projectId: integer("project_id"), // Circular dependency if referencing projects directly here, usually people exist independently or linked via junction. But if needed: .references(() => projects.id) - careful with order.
+    ...timestamps,
+});
+
 export const projects = sqliteTable("projects", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
@@ -27,41 +49,13 @@ export const projects = sqliteTable("projects", {
     ...timestamps,
 });
 
-
-
-export const notes = sqliteTable("notes", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    projectId: integer("project_id").references(() => projects.id),
-    title: text("title"),
-    content: text("content").notNull(),
-    ...timestamps,
-});
-
-export const generalTasks = sqliteTable("general_tasks", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    title: text("title").notNull(),
-    status: text("status", { enum: ["todo", "in_progress", "done"] }).default("todo").notNull(),
-    priority: text("priority", { enum: ["low", "medium", "high"] }).default("medium"),
-    dueDate: integer("due_date", { mode: "timestamp" }),
-    ...timestamps,
-});
-
-export const clients = sqliteTable("clients", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    name: text("name").notNull(),
-    email: text("email"),
-    phone: text("phone"),
-    company: text("company"),
-    address: text("address"),
-    ...timestamps,
-});
-
 export const leads = sqliteTable("leads", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    clientId: integer("client_id").references(() => clients.id),
-    status: text("status", { enum: ["new", "contacted", "qualified", "lost", "won"] }).default("new").notNull(),
-    value: integer("value"), // In cents or smallest currency unit
-    source: text("source"),
+    name: text("name").notNull(),
+    contactMode: text("contact_mode"), // Email, Phone, LinkedIn, Referral, etc.
+    description: text("description"),
+    status: text("status", { enum: ["new", "contacted", "lost", "won"] }).default("new").notNull(),
+    value: integer("value"), // Potential deal value in cents
     ...timestamps,
 });
 
@@ -76,9 +70,12 @@ export const transactions = sqliteTable("transactions", {
     date: integer("date", { mode: "timestamp" }).notNull(),
     category: text("category"), // "sales", "salary", "office", "equipment", etc.
 
+    // Project and Client references
+    projectId: integer("project_id").references(() => projects.id),
+    clientId: integer("client_id").references(() => clients.id), // Nullable, can be inferred from project
+
     // Income specific (invoices/sales)
     invoiceNumber: text("invoice_number"),
-    clientId: integer("client_id").references(() => clients.id),
     amountReceived: integer("amount_received").default(0),
     status: text("status", { enum: ["draft", "sent", "paid", "partial", "overdue", "cancelled"] }),
     dueDate: integer("due_date", { mode: "timestamp" }),
@@ -90,26 +87,23 @@ export const transactions = sqliteTable("transactions", {
     ...timestamps,
 });
 
-export const people = sqliteTable("people", {
+export const notes = sqliteTable("notes", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    name: text("name").notNull(),
-    role: text("role"),
-    email: text("email"),
-    phone: text("phone"),
-    status: text("status", { enum: ["hiring", "active", "inactive", "terminated"] }).default("hiring").notNull(),
-    hourlyRate: integer("hourly_rate"),
     projectId: integer("project_id").references(() => projects.id),
+    title: text("title"),
+    content: text("content").notNull(),
     ...timestamps,
 });
 
-export const projectTasks = sqliteTable("project_tasks", {
+export const tasks = sqliteTable("tasks", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    projectId: integer("project_id").references(() => projects.id),
     title: text("title").notNull(),
+    type: text("type", { enum: ["personal", "project"] }).default("personal").notNull(),
     status: text("status", { enum: ["todo", "in_progress", "done", "blocked"] }).default("todo").notNull(),
-    assigneeId: integer("assignee_id").references(() => people.id), // Linked to people
     priority: text("priority", { enum: ["low", "medium", "high"] }).default("medium"),
     dueDate: integer("due_date", { mode: "timestamp" }),
+    projectId: integer("project_id").references(() => projects.id),
+    assigneeId: integer("assignee_id").references(() => people.id),
     ...timestamps,
 });
 

@@ -32,9 +32,9 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Top Navigation Bar */}
-            <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+            <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center space-x-6 w-full">
+                    <div className="flex items-center space-x-6 flex-1">
                         <h1 className="text-xl font-bold text-gray-900 dark:text-white hidden md:block shrink-0">OhMyLife</h1>
 
                         {/* Tab Navigation */}
@@ -62,14 +62,10 @@ export default function DashboardLayout({
                                 </Link>
                                 <Link href="/dashboard/sales">
                                     <TabsTrigger value="sales" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                        <CreditCard size={18} /> Sales
+                                        <CreditCard size={18} /> Finance
                                     </TabsTrigger>
                                 </Link>
-                                <Link href="/dashboard/people">
-                                    <TabsTrigger value="people" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                        <UserCircle size={18} /> People
-                                    </TabsTrigger>
-                                </Link>
+
                             </TabsList>
                         </Tabs>
                     </div>

@@ -8,6 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+
 
 interface Client {
     id: number;
@@ -20,6 +30,14 @@ export default function NewProjectPage() {
     const [loading, setLoading] = useState(false);
     const [clients, setClients] = useState<Client[]>([]);
     const [clientId, setClientId] = useState("");
+
+    // Quick Create Client State
+    const [clientDialogOpen, setClientDialogOpen] = useState(false);
+    const [newClientName, setNewClientName] = useState("");
+    const [newClientCompany, setNewClientCompany] = useState("");
+    const [newClientEmail, setNewClientEmail] = useState("");
+    const [newClientPhone, setNewClientPhone] = useState("");
+    const [creatingClient, setCreatingClient] = useState(false);
 
     useEffect(() => {
         fetchClients();
@@ -34,6 +52,39 @@ export default function NewProjectPage() {
             }
         } catch (error) {
             console.error("Failed to fetch clients", error);
+        }
+    };
+
+    const handleCreateClient = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreatingClient(true);
+        try {
+            const res = await fetch("/api/clients", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: newClientName,
+                    company: newClientCompany,
+                    email: newClientEmail,
+                    phone: newClientPhone,
+                }),
+            });
+
+            if (res.ok) {
+                const newClient: Client = await res.json();
+                await fetchClients(); // Refresh list
+                setClientId(newClient.id.toString()); // Auto-select new client
+                setClientDialogOpen(false);
+                // Reset form
+                setNewClientName("");
+                setNewClientCompany("");
+                setNewClientEmail("");
+                setNewClientPhone("");
+            }
+        } catch (error) {
+            console.error("Failed to create client", error);
+        } finally {
+            setCreatingClient(false);
         }
     };
 
@@ -53,7 +104,6 @@ export default function NewProjectPage() {
             clientId: processedClientId,
             startDate: data.startDate,
             endDate: data.endDate,
-            // Add other fields as necessary, e.g., status if it were part of the form
         };
 
         try {
@@ -94,19 +144,30 @@ export default function NewProjectPage() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="client">Client (Optional)</Label>
-                            <Select value={clientId} onValueChange={setClientId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a client" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">No Client</SelectItem>
-                                    {clients.map((client) => (
-                                        <SelectItem key={client.id} value={client.id.toString()}>
-                                            {client.name} {client.company && `(${client.company})`}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="flex gap-2">
+                                <Select value={clientId} onValueChange={setClientId}>
+                                    <SelectTrigger className="flex-1">
+                                        <SelectValue placeholder="Select a client" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No Client</SelectItem>
+                                        {clients.map((client) => (
+                                            <SelectItem key={client.id} value={client.id.toString()}>
+                                                {client.name} {client.company && `(${client.company})`}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setClientDialogOpen(true)}
+                                    title="Create New Client"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -127,6 +188,71 @@ export default function NewProjectPage() {
                     </form>
                 </CardContent>
             </Card>
+
+            {/* Quick Create Client Dialog */}
+            <Dialog open={clientDialogOpen} onOpenChange={setClientDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New Client</DialogTitle>
+                        <DialogDescription>
+                            Create a new client to assign to this project.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateClient}>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="clientName">Name *</Label>
+                                <Input
+                                    id="clientName"
+                                    value={newClientName}
+                                    onChange={(e) => setNewClientName(e.target.value)}
+                                    required
+                                    placeholder="Client name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="clientCompany">Company *</Label>
+                                <Input
+                                    id="clientCompany"
+                                    value={newClientCompany}
+                                    onChange={(e) => setNewClientCompany(e.target.value)}
+                                    required
+                                    placeholder="Company name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="clientEmail">Email *</Label>
+                                <Input
+                                    id="clientEmail"
+                                    type="email"
+                                    value={newClientEmail}
+                                    onChange={(e) => setNewClientEmail(e.target.value)}
+                                    required
+                                    placeholder="client@example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="clientPhone">Phone</Label>
+                                <Input
+                                    id="clientPhone"
+                                    type="tel"
+                                    value={newClientPhone}
+                                    onChange={(e) => setNewClientPhone(e.target.value)}
+                                    placeholder="+1 (555) 123-4567"
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setClientDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={creatingClient}>
+                                {creatingClient ? "Creating..." : "Create Client"}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

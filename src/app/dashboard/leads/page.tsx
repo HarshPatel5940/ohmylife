@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Dialog,
     DialogContent,
@@ -21,36 +22,30 @@ import {
 
 interface Lead {
     id: number;
-    clientId?: number;
-    status: "new" | "contacted" | "qualified" | "lost" | "won";
-    value?: number;
-    source?: string;
-    createdAt: string;
-}
-
-interface Client {
-    id: number;
     name: string;
-    company: string;
+    contactMode?: string;
+    description?: string;
+    status: "new" | "contacted" | "lost" | "won";
+    value?: number;
+    createdAt: string;
 }
 
 export default function LeadsPage() {
     const [leads, setLeads] = useState<Lead[]>([]);
-    const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
     const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
     // Form State
-    const [clientId, setClientId] = useState("");
+    const [name, setName] = useState("");
+    const [contactMode, setContactMode] = useState("");
+    const [description, setDescription] = useState("");
     const [status, setStatus] = useState("new");
     const [value, setValue] = useState("");
-    const [source, setSource] = useState("");
 
     useEffect(() => {
         fetchLeads();
-        fetchClients();
     }, []);
 
     const fetchLeads = async () => {
@@ -65,25 +60,14 @@ export default function LeadsPage() {
         }
     };
 
-    const fetchClients = async () => {
-        try {
-            const res = await fetch("/api/clients");
-            if (res.ok) {
-                const data = await res.json() as Client[];
-                setClients(data);
-            }
-        } catch (error) {
-            console.error("Failed to fetch clients", error);
-        }
-    };
-
     const openDialog = (lead?: Lead) => {
         if (lead) {
             setEditingLead(lead);
-            setClientId(lead.clientId?.toString() || "");
+            setName(lead.name);
+            setContactMode(lead.contactMode || "");
+            setDescription(lead.description || "");
             setStatus(lead.status);
             setValue(lead.value?.toString() || "");
-            setSource(lead.source || "");
         } else {
             resetForm();
         }
@@ -92,20 +76,26 @@ export default function LeadsPage() {
 
     const resetForm = () => {
         setEditingLead(null);
-        setClientId("none");
+        setName("");
+        setContactMode("");
+        setDescription("");
         setStatus("new");
         setValue("");
-        setSource("");
     };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!name.trim()) {
+            alert("Name is required");
+            return;
+        }
         try {
             const leadData = {
-                clientId: clientId === "none" ? null : (clientId ? parseInt(clientId) : null),
+                name,
+                contactMode,
+                description,
                 status,
                 value: value ? parseFloat(value) : null,
-                source,
             };
 
             if (editingLead) {
@@ -151,17 +141,12 @@ export default function LeadsPage() {
         }
     };
 
-    const getClientName = (clientId?: number) => {
-        if (!clientId) return "No Client";
-        const client = clients.find(c => c.id === clientId);
-        return client ? `${client.name}${client.company ? ` (${client.company})` : ''}` : "Unknown";
-    };
+
 
     const getStatusBadgeVariant = (status: string) => {
         switch (status) {
             case "won": return "default";
             case "lost": return "destructive";
-            case "qualified": return "secondary";
             default: return "outline";
         }
     };
@@ -207,216 +192,207 @@ export default function LeadsPage() {
     const columns: { id: Lead["status"], label: string }[] = [
         { id: "new", label: "New" },
         { id: "contacted", label: "Contacted" },
-        { id: "qualified", label: "Qualified" },
         { id: "won", label: "Won" },
         { id: "lost", label: "Lost" },
     ];
 
     const filteredLeads = useMemo(() => {
         return leads.filter(l => {
-            const clientName = getClientName(l.clientId).toLowerCase();
-            return clientName.includes(search.toLowerCase()) ||
-                l.source?.toLowerCase().includes(search.toLowerCase()) ||
+            return l.name.toLowerCase().includes(search.toLowerCase()) ||
+                l.contactMode?.toLowerCase().includes(search.toLowerCase()) ||
+                l.description?.toLowerCase().includes(search.toLowerCase()) ||
                 l.value?.toString().includes(search);
         });
-    }, [leads, search, clients]);
+    }, [leads, search]);
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Leads</h1>
-                <div className="flex gap-2">
-                    <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg flex">
-                        <Button
-                            variant={view === "list" ? "secondary" : "ghost"}
-                            size="sm"
-                            onClick={() => setView("list")}
-                        >
-                            List
-                        </Button>
-                        <Button
-                            variant={view === "board" ? "secondary" : "ghost"}
-                            size="sm"
-                            onClick={() => setView("board")}
-                        >
-                            Board
+            <Tabs value={view} onValueChange={(v) => setView(v as "list" | "board")} className="w-full">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Leads</h1>
+                    <div className="flex gap-2 items-center">
+                        <TabsList>
+                            <TabsTrigger value="board">Board</TabsTrigger>
+                            <TabsTrigger value="list">List</TabsTrigger>
+                        </TabsList>
+                        <Button onClick={() => openDialog()}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Lead
                         </Button>
                     </div>
-                    <Button onClick={() => openDialog()}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Lead
-                    </Button>
                 </div>
-            </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{leads.length}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">New</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{leads.filter(l => l.status === "new").length}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Qualified</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{leads.filter(l => l.status === "qualified").length}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Won</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{leads.filter(l => l.status === "won").length}</div>
-                    </CardContent>
-                </Card>
-            </div>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{leads.length}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">New</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{leads.filter(l => l.status === "new").length}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Contacted</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{leads.filter(l => l.status === "contacted").length}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Won</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{leads.filter(l => l.status === "won").length}</div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                    placeholder="Search leads..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 max-w-md"
-                />
-            </div>
+                <div className="relative mb-6">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                        placeholder="Search leads..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-10 max-w-md"
+                    />
+                </div>
 
-            {view === "list" ? (
-                <Card>
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Client</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Value</TableHead>
-                                    <TableHead>Source</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    Array.from({ length: 5 }).map((_, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                            <TableCell><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : filteredLeads.map((lead) => (
-                                    <TableRow key={lead.id}>
-                                        <TableCell className="font-medium">{getClientName(lead.clientId)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getStatusBadgeVariant(lead.status)}>
-                                                {lead.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{lead.value ? `₹${lead.value.toLocaleString('en-IN')}` : "-"}</TableCell>
-                                        <TableCell>{lead.source || "-"}</TableCell>
-                                        <TableCell>{new Date(lead.createdAt).toLocaleDateString()}</TableCell>
-                                        <TableCell className="text-right space-x-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => openDialog(lead)}
-                                            >
-                                                <Edit2 className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleDelete(lead)}
-                                            >
-                                                <Trash2 className="h-4 w-4 text-red-600" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {filteredLeads.length === 0 && !loading && (
+                <TabsContent value="list">
+                    <Card>
+                        <CardContent className="p-0">
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                                            No leads found. Click &quot;Add Lead&quot; to create one.
-                                        </TableCell>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Value</TableHead>
+                                        <TableHead>Contact Mode</TableHead>
+                                        <TableHead>Created</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            ) : (
-                <div className="flex gap-4 overflow-x-auto pb-4">
-                    {loading ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="min-w-[280px] w-full bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex flex-col gap-3">
-                                <Skeleton className="h-6 w-24 mb-2" />
-                                <Skeleton className="h-24 w-full rounded-xl" />
-                                <Skeleton className="h-24 w-full rounded-xl" />
-                            </div>
-                        ))
-                    ) : columns.map(col => (
-                        <div
-                            key={col.id}
-                            className="min-w-[280px] w-full bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex flex-col gap-3"
-                            onDragOver={handleDragOver}
-                            onDrop={(e) => handleDrop(e, col.id)}
-                        >
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-semibold text-gray-700 dark:text-gray-300">{col.label}</h3>
-                                <Badge variant="secondary" className="text-xs">
-                                    {filteredLeads.filter(l => l.status === col.id).length}
-                                </Badge>
-                            </div>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? (
+                                        Array.from({ length: 5 }).map((_, i) => (
+                                            <TableRow key={i}>
+                                                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                                <TableCell><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : filteredLeads.map((lead) => (
+                                        <TableRow key={lead.id}>
+                                            <TableCell className="font-medium">{lead.name}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={getStatusBadgeVariant(lead.status)}>
+                                                    {lead.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>{lead.value ? `₹${lead.value.toLocaleString('en-IN')}` : "-"}</TableCell>
+                                            <TableCell>{lead.contactMode || "-"}</TableCell>
+                                            <TableCell>{new Date(lead.createdAt).toLocaleDateString()}</TableCell>
+                                            <TableCell className="text-right space-x-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => openDialog(lead)}
+                                                >
+                                                    <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(lead)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {filteredLeads.length === 0 && !loading && (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                                No leads found. Click &quot;Add Lead&quot; to create one.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
-                            {filteredLeads.filter(l => l.status === col.id).map(lead => (
-                                <Card
-                                    key={lead.id}
-                                    className="cursor-move hover:shadow-md transition-shadow"
-                                    draggable
-                                    onDragStart={() => handleDragStart(lead)}
-                                    onClick={() => openDialog(lead)}
-                                >
-                                    <CardContent className="p-4 space-y-2">
-                                        <div className="font-medium">{getClientName(lead.clientId)}</div>
-                                        <div className="flex justify-between items-center text-sm text-gray-500">
-                                            <span>{lead.value ? `₹${lead.value.toLocaleString('en-IN')}` : "No Value"}</span>
-                                            <span className="text-xs">{new Date(lead.createdAt).toLocaleDateString()}</span>
-                                        </div>
-                                        {lead.source && (
-                                            <div className="text-xs text-gray-400 truncate">
-                                                via {lead.source}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            ))}
-
-                            {filteredLeads.filter(l => l.status === col.id).length === 0 && (
-                                <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg">
-                                    Empty
+                <TabsContent value="board">
+                    <div className="flex gap-4 overflow-x-auto pb-4">
+                        {loading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="min-w-[280px] w-full bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex flex-col gap-3">
+                                    <Skeleton className="h-6 w-24 mb-2" />
+                                    <Skeleton className="h-24 w-full rounded-xl" />
+                                    <Skeleton className="h-24 w-full rounded-xl" />
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
+                            ))
+                        ) : columns.map(col => (
+                            <div
+                                key={col.id}
+                                className="min-w-[280px] w-full bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex flex-col gap-3"
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, col.id)}
+                            >
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="font-semibold text-gray-700 dark:text-gray-300">{col.label}</h3>
+                                    <Badge variant="secondary" className="text-xs">
+                                        {filteredLeads.filter(l => l.status === col.id).length}
+                                    </Badge>
+                                </div>
+
+                                {filteredLeads.filter(l => l.status === col.id).map(lead => (
+                                    <Card
+                                        key={lead.id}
+                                        className="cursor-move hover:shadow-md transition-shadow"
+                                        draggable
+                                        onDragStart={() => handleDragStart(lead)}
+                                        onClick={() => openDialog(lead)}
+                                    >
+                                        <CardContent className="p-4 space-y-2">
+                                            <div className="font-medium">{lead.name}</div>
+                                            <div className="flex justify-between items-center text-sm text-gray-500">
+                                                <span>{lead.value ? `₹${lead.value.toLocaleString('en-IN')}` : "No Value"}</span>
+                                                <span className="text-xs">{new Date(lead.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                            {lead.contactMode && (
+                                                <div className="text-xs text-gray-400 truncate">
+                                                    via {lead.contactMode}
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+
+                                {filteredLeads.filter(l => l.status === col.id).length === 0 && (
+                                    <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg">
+                                        Empty
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </TabsContent>
+            </Tabs>
 
             <Dialog open={open} onOpenChange={(val) => {
                 setOpen(val);
@@ -432,20 +408,35 @@ export default function LeadsPage() {
                     <form onSubmit={handleSave}>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="client" className="text-right">Client</Label>
-                                <Select value={clientId} onValueChange={setClientId}>
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="Select a client" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">No Client</SelectItem>
-                                        {clients.map((client) => (
-                                            <SelectItem key={client.id} value={client.id.toString()}>
-                                                {client.name} {client.company && `(${client.company})`}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="name" className="text-right">Name *</Label>
+                                <Input
+                                    id="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="col-span-3"
+                                    placeholder="Lead name"
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="contactMode" className="text-right">Contact Mode</Label>
+                                <Input
+                                    id="contactMode"
+                                    value={contactMode}
+                                    onChange={(e) => setContactMode(e.target.value)}
+                                    className="col-span-3"
+                                    placeholder="e.g. Email, Phone, LinkedIn"
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="description" className="text-right">Description</Label>
+                                <Input
+                                    id="description"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="col-span-3"
+                                    placeholder="Brief description"
+                                />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="status" className="text-right">Status</Label>
@@ -456,7 +447,6 @@ export default function LeadsPage() {
                                     <SelectContent>
                                         <SelectItem value="new">New</SelectItem>
                                         <SelectItem value="contacted">Contacted</SelectItem>
-                                        <SelectItem value="qualified">Qualified</SelectItem>
                                         <SelectItem value="won">Won</SelectItem>
                                         <SelectItem value="lost">Lost</SelectItem>
                                     </SelectContent>
@@ -473,16 +463,6 @@ export default function LeadsPage() {
                                     placeholder="Estimated value"
                                 />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="source" className="text-right">Source</Label>
-                                <Input
-                                    id="source"
-                                    value={source}
-                                    onChange={(e) => setSource(e.target.value)}
-                                    className="col-span-3"
-                                    placeholder="e.g. Website, Referral"
-                                />
-                            </div>
                         </div>
                         <DialogFooter>
                             <Button type="submit">{editingLead ? "Update Lead" : "Save Lead"}</Button>
@@ -490,6 +470,6 @@ export default function LeadsPage() {
                     </form>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

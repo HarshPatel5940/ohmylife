@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TasksPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -30,13 +31,24 @@ export default function TasksPage() {
     const [status, setStatus] = useState("todo");
     const [dueDate, setDueDate] = useState("");
 
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+
+    const filteredTasks = useMemo(() => {
+        return tasks.filter(task => {
+            const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase());
+            const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [tasks, search, statusFilter]);
+
     useEffect(() => {
         fetchTasks();
     }, []);
 
     const fetchTasks = async () => {
         try {
-            const res = await fetch("/api/tasks");
+            const res = await fetch("/api/tasks?type=personal");
             if (res.ok) {
                 const data = await res.json() as Task[];
                 setTasks(data);
@@ -56,6 +68,7 @@ export default function TasksPage() {
                 priority,
                 status,
                 dueDate: dueDate || null,
+                type: "personal",
             };
 
             if (editingTask) {
@@ -178,154 +191,171 @@ export default function TasksPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tasks</h1>
-                <div className="flex gap-2">
-                    <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg flex">
-                        <Button
-                            variant={view === "list" ? "secondary" : "ghost"}
-                            size="sm"
-                            onClick={() => setView("list")}
-                        >
-                            List
-                        </Button>
-                        <Button
-                            variant={view === "board" ? "secondary" : "ghost"}
-                            size="sm"
-                            onClick={() => setView("board")}
-                        >
-                            Board
-                        </Button>
+            <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tasks</h1>
+                    <div className="flex gap-2 items-center">
+                        <Tabs value={view} onValueChange={(v) => setView(v as "list" | "board")}>
+                            <TabsList>
+                                <TabsTrigger value="board">Board</TabsTrigger>
+                                <TabsTrigger value="list">List</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                        <Dialog open={open} onOpenChange={(val) => {
+                            setOpen(val);
+                            if (!val) resetForm();
+                        }}>
+                            <DialogTrigger asChild>
+                                <Button onClick={resetForm}>
+                                    <Plus className="mr-2 h-4 w-4" /> Add Task
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                    <DialogTitle>{editingTask ? "Edit Task" : "Add New Task"}</DialogTitle>
+                                    <DialogDescription>
+                                        {editingTask ? "Update task details." : "Create a new task for your board."}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form onSubmit={handleSave}>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="title" className="text-right">
+                                                Title
+                                            </Label>
+                                            <Input
+                                                id="title"
+                                                value={title}
+                                                onChange={(e) => setTitle(e.target.value)}
+                                                className="col-span-3"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="priority" className="text-right">
+                                                Priority
+                                            </Label>
+                                            <Select value={priority} onValueChange={setPriority}>
+                                                <SelectTrigger className="col-span-3">
+                                                    <SelectValue placeholder="Select priority" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="low">Low</SelectItem>
+                                                    <SelectItem value="medium">Medium</SelectItem>
+                                                    <SelectItem value="high">High</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="status" className="text-right">
+                                                Status
+                                            </Label>
+                                            <Select value={status} onValueChange={setStatus}>
+                                                <SelectTrigger className="col-span-3">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="todo">To Do</SelectItem>
+                                                    <SelectItem value="in_progress">In Progress</SelectItem>
+                                                    <SelectItem value="done">Done</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="dueDate" className="text-right">
+                                                Due Date
+                                            </Label>
+                                            <Input
+                                                id="dueDate"
+                                                type="date"
+                                                value={dueDate}
+                                                onChange={(e) => setDueDate(e.target.value)}
+                                                className="col-span-3"
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit">{editingTask ? "Update Task" : "Save Task"}</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
                     </div>
-                    <Dialog open={open} onOpenChange={(val) => {
-                        setOpen(val);
-                        if (!val) resetForm();
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button onClick={resetForm}>
-                                <Plus className="mr-2 h-4 w-4" /> Add Task
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                                <DialogTitle>{editingTask ? "Edit Task" : "Add New Task"}</DialogTitle>
-                                <DialogDescription>
-                                    {editingTask ? "Update task details." : "Create a new task for your board."}
-                                </DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleSave}>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="title" className="text-right">
-                                            Title
-                                        </Label>
-                                        <Input
-                                            id="title"
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
-                                            className="col-span-3"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="priority" className="text-right">
-                                            Priority
-                                        </Label>
-                                        <Select value={priority} onValueChange={setPriority}>
-                                            <SelectTrigger className="col-span-3">
-                                                <SelectValue placeholder="Select priority" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="low">Low</SelectItem>
-                                                <SelectItem value="medium">Medium</SelectItem>
-                                                <SelectItem value="high">High</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="status" className="text-right">
-                                            Status
-                                        </Label>
-                                        <Select value={status} onValueChange={setStatus}>
-                                            <SelectTrigger className="col-span-3">
-                                                <SelectValue placeholder="Select status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="todo">To Do</SelectItem>
-                                                <SelectItem value="in_progress">In Progress</SelectItem>
-                                                <SelectItem value="done">Done</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="dueDate" className="text-right">
-                                            Due Date
-                                        </Label>
-                                        <Input
-                                            id="dueDate"
-                                            type="date"
-                                            value={dueDate}
-                                            onChange={(e) => setDueDate(e.target.value)}
-                                            className="col-span-3"
-                                        />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button type="submit">{editingTask ? "Update Task" : "Save Task"}</Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                </div>
+
+                <div className="flex gap-4 items-center">
+                    <div className="flex-1">
+                        <Input
+                            placeholder="Search tasks..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="max-w-sm"
+                        />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="todo">To Do</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="done">Done</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
-            {view === "list" ? (
-                <DataTable columns={columns} data={tasks} />
-            ) : (
-                <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-200px)]">
-                    {boardColumns.map(col => (
-                        <div
-                            key={col.id}
-                            className="min-w-[300px] w-full bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex flex-col gap-3"
-                            onDragOver={handleDragOver}
-                            onDrop={(e) => handleDrop(e, col.id)}
-                        >
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-semibold text-gray-700 dark:text-gray-300">{col.label}</h3>
-                                <span className="text-xs bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded-full">
-                                    {tasks.filter(t => t.status === col.id).length}
-                                </span>
-                            </div>
+            <Tabs value={view} className="w-full">
+                <TabsContent value="list">
+                    <DataTable columns={columns} data={filteredTasks} />
+                </TabsContent>
+                <TabsContent value="board">
+                    <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-200px)]">
+                        {boardColumns.map(col => (
+                            <div
+                                key={col.id}
+                                className="min-w-[300px] w-full bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex flex-col gap-3"
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, col.id)}
+                            >
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="font-semibold text-gray-700 dark:text-gray-300">{col.label}</h3>
+                                    <span className="text-xs bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded-full">
+                                        {filteredTasks.filter(t => t.status === col.id).length}
+                                    </span>
+                                </div>
 
-                            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                                {tasks.filter(t => t.status === col.id).map(task => (
-                                    <div
-                                        key={task.id}
-                                        className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 cursor-move hover:shadow-md transition-all"
-                                        draggable
-                                        onDragStart={() => handleDragStart(task)}
-                                        onClick={() => handleEdit(task)}
-                                    >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h4 className="font-medium text-sm line-clamp-2">{task.title}</h4>
-                                        </div>
-                                        <div className="flex justify-between items-center mt-3">
-                                            <span className={`text-[10px] px-2 py-0.5 rounded font-medium uppercase tracking-wide ${getPriorityColor(task.priority)}`}>
-                                                {task.priority}
-                                            </span>
-                                            {task.dueDate && (
-                                                <span className="text-xs text-gray-400">
-                                                    {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                                    {filteredTasks.filter(t => t.status === col.id).map(task => (
+                                        <div
+                                            key={task.id}
+                                            className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 cursor-move hover:shadow-md transition-all"
+                                            draggable
+                                            onDragStart={() => handleDragStart(task)}
+                                            onClick={() => handleEdit(task)}
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-medium text-sm line-clamp-2">{task.title}</h4>
+                                            </div>
+                                            <div className="flex justify-between items-center mt-3">
+                                                <span className={`text-[10px] px-2 py-0.5 rounded font-medium uppercase tracking-wide ${getPriorityColor(task.priority)}`}>
+                                                    {task.priority}
                                                 </span>
-                                            )}
+                                                {task.dueDate && (
+                                                    <span className="text-xs text-gray-400">
+                                                        {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

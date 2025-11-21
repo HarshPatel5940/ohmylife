@@ -21,16 +21,21 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { clientId, status, value, source } = await request.json() as any;
+        const { name, contactMode, description, status, value } = await request.json() as any;
+
+        if (!name) {
+            return NextResponse.json({ error: "Name is required" }, { status: 400 });
+        }
 
         const { env } = getCloudflareContext();
         const db = getDb(env);
 
         const newLead = await db.insert(leads).values({
-            clientId: clientId ? parseInt(clientId) : null,
+            name,
+            contactMode,
+            description,
             status: status || "new",
             value: value ? parseInt(value) : null,
-            source,
         }).returning();
 
         return NextResponse.json(newLead[0]);

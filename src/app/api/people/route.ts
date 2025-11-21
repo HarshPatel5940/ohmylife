@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { name, role, email, status } = await request.json() as any;
+        const { name, role, email, phone, status } = await request.json() as any;
 
         if (!name) {
             return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
             name,
             role,
             email,
+            phone: (request as any).phone, // Add phone
             status: status || "active",
         }).returning();
 

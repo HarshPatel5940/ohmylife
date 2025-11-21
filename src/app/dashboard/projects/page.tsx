@@ -44,6 +44,16 @@ interface Client {
     company: string;
     email: string;
     phone?: string;
+    revenue?: number;
+}
+
+interface Person {
+    id: number;
+    name: string;
+    role: string;
+    email: string;
+    phone?: string;
+    status: string;
 }
 
 export default function ProjectsPage() {
@@ -62,14 +72,25 @@ export default function ProjectsPage() {
     const [clientEmail, setClientEmail] = useState("");
     const [clientPhone, setClientPhone] = useState("");
 
+    // People state
+    const [people, setPeople] = useState<Person[]>([]);
+    const [personDialogOpen, setPersonDialogOpen] = useState(false);
+    const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+    const [personName, setPersonName] = useState("");
+    const [personRole, setPersonRole] = useState("");
+    const [personEmail, setPersonEmail] = useState("");
+    const [personPhone, setPersonPhone] = useState("");
+    const [personStatus, setPersonStatus] = useState("active");
+
     // Delete confirmation dialog state
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [deleteType, setDeleteType] = useState<"project" | "client">("project");
+    const [deleteType, setDeleteType] = useState<"project" | "client" | "person">("project");
     const [itemToDelete, setItemToDelete] = useState<any>(null);
 
     useEffect(() => {
         fetchProjects();
         fetchClients();
+        fetchPeople();
     }, []);
 
     const fetchProjects = async () => {
@@ -151,35 +172,71 @@ export default function ProjectsPage() {
         }
     };
 
-    const openDeleteDialog = (type: "project" | "client", item: any) => {
-        setDeleteType(type);
-        setItemToDelete(item);
-        setDeleteDialogOpen(true);
+    const fetchPeople = async () => {
+        try {
+            const res = await fetch("/api/people");
+            if (res.ok) {
+                const data = await res.json() as Person[];
+                setPeople(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch people", error);
+        }
     };
 
-    const handleDeleteConfirm = async () => {
-        if (!itemToDelete) return;
+    const openPersonDialog = (person?: Person) => {
+        if (person) {
+            setEditingPerson(person);
+            setPersonName(person.name);
+            setPersonRole(person.role);
+            setPersonEmail(person.email);
+            setPersonPhone(person.phone || "");
+            setPersonStatus(person.status);
+        } else {
+            setEditingPerson(null);
+            setPersonName("");
+            setPersonRole("");
+            setPersonEmail("");
+            setPersonPhone("");
+            setPersonStatus("active");
+        }
+        setPersonDialogOpen(true);
+    };
+
+    const handleSavePerson = async (e: React.FormEvent) => {
+        e.preventDefault();
         try {
-            if (deleteType === "project") {
-                const res = await fetch(`/api/projects/${itemToDelete.id}`, {
-                    method: "DELETE",
+            const personData = {
+                name: personName,
+                role: personRole,
+                email: personEmail,
+                phone: personPhone,
+                status: personStatus,
+            };
+
+            if (editingPerson) {
+                const res = await fetch(`/api/people/${editingPerson.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(personData),
                 });
                 if (res.ok) {
-                    fetchProjects();
+                    fetchPeople();
+                    setPersonDialogOpen(false);
                 }
             } else {
-                const res = await fetch(`/api/clients/${itemToDelete.id}`, {
-                    method: "DELETE",
+                const res = await fetch("/api/people", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(personData),
                 });
                 if (res.ok) {
-                    fetchClients();
-                    fetchProjects(); // Refresh projects to update client names
+                    fetchPeople();
+                    setPersonDialogOpen(false);
                 }
             }
-            setDeleteDialogOpen(false);
-            setItemToDelete(null);
         } catch (error) {
-            console.error("Failed to delete", error);
+            console.error("Failed to save person", error);
         }
     };
 
@@ -204,36 +261,87 @@ export default function ProjectsPage() {
         return projects.filter(p => p.clientId === clientId).length;
     };
 
+    const filteredPeople = useMemo(() => {
+        return people.filter(p =>
+            p.name.toLowerCase().includes(search.toLowerCase()) ||
+            p.role.toLowerCase().includes(search.toLowerCase()) ||
+            p.email.toLowerCase().includes(search.toLowerCase())
+        );
+    }, [people, search]);
+
+    // Update delete handler
+    const openDeleteDialog = (type: "project" | "client" | "person", item: any) => {
+        setDeleteType(type);
+        setItemToDelete(item);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!itemToDelete) return;
+        try {
+            if (deleteType === "project") {
+                const res = await fetch(`/api/projects/${itemToDelete.id}`, {
+                    method: "DELETE",
+                });
+                if (res.ok) fetchProjects();
+            } else if (deleteType === "client") {
+                const res = await fetch(`/api/clients/${itemToDelete.id}`, {
+                    method: "DELETE",
+                });
+                if (res.ok) {
+                    fetchClients();
+                    fetchProjects();
+                }
+            } else if (deleteType === "person") {
+                const res = await fetch(`/api/people/${itemToDelete.id}`, {
+                    method: "DELETE",
+                });
+                if (res.ok) fetchPeople();
+            }
+            setDeleteDialogOpen(false);
+            setItemToDelete(null);
+        } catch (error) {
+            console.error("Failed to delete", error);
+        }
+    };
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects & Clients</h1>
-            </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <TabsList className="bg-gray-100 dark:bg-gray-800">
-                        <TabsTrigger value="projects">Projects</TabsTrigger>
-                        <TabsTrigger value="clients">Clients</TabsTrigger>
-                    </TabsList>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects Management</h1>
+                    <div className="flex flex-row space-x-6 items-center">
+                        <TabsList className="bg-gray-100 dark:bg-gray-800">
+                            <TabsTrigger value="projects">Projects</TabsTrigger>
+                            <TabsTrigger value="clients">Clients</TabsTrigger>
+                            <TabsTrigger value="people">People</TabsTrigger>
+                        </TabsList>
 
-                    <div className="flex gap-2">
-                        {activeTab === "clients" && (
-                            <Button onClick={() => openClientDialog()}>
-                                <Plus className="mr-2 h-4 w-4" /> Add Client
-                            </Button>
-                        )}
-                        {activeTab === "projects" && (
-                            <Button asChild>
-                                <Link href="/dashboard/projects/new">
-                                    <Plus className="mr-2 h-4 w-4" /> Add Project
-                                </Link>
-                            </Button>
-                        )}
+                        <div className="flex gap-2">
+                            {activeTab === "clients" && (
+                                <Button onClick={() => openClientDialog()}>
+                                    <Plus className="mr-2 h-4 w-4" /> Add Client
+                                </Button>
+                            )}
+                            {activeTab === "projects" && (
+                                <Button asChild>
+                                    <Link href="/dashboard/projects/new">
+                                        <Plus className="mr-2 h-4 w-4" /> Add Project
+                                    </Link>
+                                </Button>
+                            )}
+                            {activeTab === "people" && (
+                                <Button onClick={() => openPersonDialog()}>
+                                    <Plus className="mr-2 h-4 w-4" /> Add Person
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 <TabsContent value="projects" className="space-y-6">
+                    {/* ... existing projects content ... */}
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <Card>
@@ -312,45 +420,51 @@ export default function ProjectsPage() {
                             </div>
                         ) : (
                             filteredProjects.map((project) => (
-                                <Card key={project.id} className="hover:shadow-lg transition-shadow">
+                                <Card key={project.id} className="hover:shadow-lg transition-shadow h-full relative group">
+                                    <Link href={`/dashboard/projects/${project.id}`} className="absolute inset-0 z-10">
+                                        <span className="sr-only">View Project</span>
+                                    </Link>
                                     <CardHeader>
                                         <div className="flex justify-between items-start">
                                             <div className="flex-1">
-                                                <Link href={`/dashboard/projects/${project.id}`}>
-                                                    <CardTitle className="hover:text-primary cursor-pointer">
-                                                        {project.name}
-                                                    </CardTitle>
-                                                </Link>
+                                                <CardTitle className="group-hover:text-primary transition-colors">
+                                                    {project.name}
+                                                </CardTitle>
                                                 <CardDescription className="mt-1">
                                                     {project.clientName || "No client"}
                                                 </CardDescription>
                                             </div>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem asChild>
-                                                        <Link href={`/dashboard/projects/${project.id}`}>
-                                                            <Edit2 className="h-4 w-4 mr-2" />
-                                                            View/Edit
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() => openDeleteDialog("project", project)}
-                                                        className="text-red-600"
-                                                    >
-                                                        <Trash2 className="h-4 w-4 mr-2" />
-                                                        Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <div className="relative z-20">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem asChild onClick={(e) => e.stopPropagation()}>
+                                                            <Link href={`/dashboard/projects/${project.id}`} className="flex items-center w-full">
+                                                                <Edit2 className="h-4 w-4 mr-2" />
+                                                                View/Edit
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openDeleteDialog("project", project);
+                                                            }}
+                                                            className="text-red-600"
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-2" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-4 h-10">
                                             {project.description || "No description"}
                                         </p>
                                         <div className="flex items-center justify-between">
@@ -406,18 +520,24 @@ export default function ProjectsPage() {
                                                 </CardDescription>
                                             </div>
                                             <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
+                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                                     <Button variant="ghost" size="icon">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => openClientDialog(client)}>
+                                                    <DropdownMenuItem onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openClientDialog(client);
+                                                    }}>
                                                         <Edit2 className="h-4 w-4 mr-2" />
                                                         Edit
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
-                                                        onClick={() => openDeleteDialog("client", client)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            openDeleteDialog("client", client);
+                                                        }}
                                                         className="text-red-600"
                                                     >
                                                         <Trash2 className="h-4 w-4 mr-2" />
@@ -442,7 +562,91 @@ export default function ProjectsPage() {
                                             <Badge variant="outline">
                                                 {getClientProjectCount(client.id)} Projects
                                             </Badge>
+                                            <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100">
+                                                ${(client.revenue || 0).toLocaleString()} Revenue
+                                            </Badge>
                                         </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="people" className="space-y-6">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            placeholder="Search people..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredPeople.length === 0 ? (
+                            <div className="col-span-full text-center py-12 text-gray-500">
+                                No people found
+                            </div>
+                        ) : (
+                            filteredPeople.map((person) => (
+                                <Card key={person.id} className="hover:shadow-lg transition-shadow">
+                                    <CardHeader>
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1 flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                    {person.name.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <CardTitle>{person.name}</CardTitle>
+                                                    <CardDescription>{person.role}</CardDescription>
+                                                </div>
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                    <Button variant="ghost" size="icon">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openPersonDialog(person);
+                                                    }}>
+                                                        <Edit2 className="h-4 w-4 mr-2" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            openDeleteDialog("person", person);
+                                                        }}
+                                                        className="text-red-600"
+                                                    >
+                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Badge variant={person.status === 'active' ? 'default' : 'secondary'}>
+                                                {person.status}
+                                            </Badge>
+                                        </div>
+                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                            <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                                            {person.email}
+                                        </div>
+                                        {person.phone && (
+                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                                <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                                                {person.phone}
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             ))
@@ -453,64 +657,242 @@ export default function ProjectsPage() {
 
             {/* Client Dialog */}
             <Dialog open={clientDialogOpen} onOpenChange={setClientDialogOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
+                        <DialogTitle>{editingClient ? "Client Details" : "Add New Client"}</DialogTitle>
                         <DialogDescription>
-                            {editingClient ? "Update client information" : "Create a new client for your projects"}
+                            {editingClient ? `Manage information for ${editingClient.name}` : "Create a new client for your projects"}
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleSaveClient}>
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Name *</Label>
+
+                    {editingClient ? (
+                        <Tabs defaultValue="details" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="details">Details</TabsTrigger>
+                                <TabsTrigger value="projects">Projects</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="details" className="space-y-4 pt-4">
+                                <form onSubmit={handleSaveClient}>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name">Name *</Label>
+                                            <Input
+                                                id="name"
+                                                value={clientName}
+                                                onChange={(e) => setClientName(e.target.value)}
+                                                required
+                                                placeholder="Client name"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="company">Company *</Label>
+                                            <Input
+                                                id="company"
+                                                value={clientCompany}
+                                                onChange={(e) => setClientCompany(e.target.value)}
+                                                required
+                                                placeholder="Company name"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="email">Email *</Label>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                value={clientEmail}
+                                                onChange={(e) => setClientEmail(e.target.value)}
+                                                required
+                                                placeholder="client@example.com"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="phone">Phone</Label>
+                                            <Input
+                                                id="phone"
+                                                type="tel"
+                                                value={clientPhone}
+                                                onChange={(e) => setClientPhone(e.target.value)}
+                                                placeholder="+1 (555) 123-4567"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end mt-6">
+                                        <Button type="submit">Update Client</Button>
+                                    </div>
+                                </form>
+                            </TabsContent>
+
+                            <TabsContent value="projects" className="space-y-4 pt-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-lg font-medium">Client Projects</h3>
+                                    <Button asChild size="sm">
+                                        <Link href={`/dashboard/projects/new?clientId=${editingClient.id}`}>
+                                            <Plus className="mr-2 h-4 w-4" /> New Project
+                                        </Link>
+                                    </Button>
+                                </div>
+                                <div className="space-y-2">
+                                    {projects.filter(p => p.clientId === editingClient.id).length === 0 ? (
+                                        <p className="text-center text-gray-500 py-8">No projects for this client yet.</p>
+                                    ) : (
+                                        projects.filter(p => p.clientId === editingClient.id).map(project => (
+                                            <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                <div>
+                                                    <Link href={`/dashboard/projects/${project.id}`} className="font-medium hover:underline">
+                                                        {project.name}
+                                                    </Link>
+                                                    <p className="text-xs text-gray-500">{project.status}</p>
+                                                </div>
+                                                <Button variant="ghost" size="sm" asChild>
+                                                    <Link href={`/dashboard/projects/${project.id}`}>
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="sales" className="space-y-4 pt-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-lg font-medium">Client Sales</h3>
+                                    <Button size="sm" variant="outline" disabled>
+                                        <Plus className="mr-2 h-4 w-4" /> New Invoice
+                                    </Button>
+                                </div>
+                                <div className="text-center py-12 border rounded-lg border-dashed">
+                                    <DollarSign className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                                    <p className="text-gray-500">Sales tracking coming soon</p>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
+                    ) : (
+                        <form onSubmit={handleSaveClient}>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Name *</Label>
+                                    <Input
+                                        id="name"
+                                        value={clientName}
+                                        onChange={(e) => setClientName(e.target.value)}
+                                        required
+                                        placeholder="Client name"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="company">Company *</Label>
+                                    <Input
+                                        id="company"
+                                        value={clientCompany}
+                                        onChange={(e) => setClientCompany(e.target.value)}
+                                        required
+                                        placeholder="Company name"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email *</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={clientEmail}
+                                        onChange={(e) => setClientEmail(e.target.value)}
+                                        required
+                                        placeholder="client@example.com"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone">Phone</Label>
+                                    <Input
+                                        id="phone"
+                                        type="tel"
+                                        value={clientPhone}
+                                        onChange={(e) => setClientPhone(e.target.value)}
+                                        placeholder="+1 (555) 123-4567"
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter className="mt-6">
+                                <Button type="button" variant="outline" onClick={() => setClientDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit">Create Client</Button>
+                            </DialogFooter>
+                        </form>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Person Dialog */}
+            <Dialog open={personDialogOpen} onOpenChange={setPersonDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>{editingPerson ? "Edit Person" : "Add New Person"}</DialogTitle>
+                        <DialogDescription>
+                            {editingPerson ? "Update team member details." : "Add a new team member."}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSavePerson}>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="personName" className="text-right">Name</Label>
                                 <Input
-                                    id="name"
-                                    value={clientName}
-                                    onChange={(e) => setClientName(e.target.value)}
+                                    id="personName"
+                                    value={personName}
+                                    onChange={(e) => setPersonName(e.target.value)}
+                                    className="col-span-3"
                                     required
-                                    placeholder="Client name"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="company">Company *</Label>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="personRole" className="text-right">Role</Label>
                                 <Input
-                                    id="company"
-                                    value={clientCompany}
-                                    onChange={(e) => setClientCompany(e.target.value)}
-                                    required
-                                    placeholder="Company name"
+                                    id="personRole"
+                                    value={personRole}
+                                    onChange={(e) => setPersonRole(e.target.value)}
+                                    className="col-span-3"
+                                    placeholder="e.g. Developer"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email *</Label>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="personEmail" className="text-right">Email</Label>
                                 <Input
-                                    id="email"
+                                    id="personEmail"
                                     type="email"
-                                    value={clientEmail}
-                                    onChange={(e) => setClientEmail(e.target.value)}
-                                    required
-                                    placeholder="client@example.com"
+                                    value={personEmail}
+                                    onChange={(e) => setPersonEmail(e.target.value)}
+                                    className="col-span-3"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="phone">Phone</Label>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="personPhone" className="text-right">Phone</Label>
                                 <Input
-                                    id="phone"
+                                    id="personPhone"
                                     type="tel"
-                                    value={clientPhone}
-                                    onChange={(e) => setClientPhone(e.target.value)}
-                                    placeholder="+1 (555) 123-4567"
+                                    value={personPhone}
+                                    onChange={(e) => setPersonPhone(e.target.value)}
+                                    className="col-span-3"
+                                    placeholder="+1 234 567 8900"
                                 />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="personStatus" className="text-right">Status</Label>
+                                <Select value={personStatus} onValueChange={setPersonStatus}>
+                                    <SelectTrigger className="col-span-3">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="hiring">Hiring</SelectItem>
+                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                        <SelectItem value="terminated">Terminated</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
-                        <DialogFooter className="mt-6">
-                            <Button type="button" variant="outline" onClick={() => setClientDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button type="submit">
-                                {editingClient ? "Update" : "Create"} Client
-                            </Button>
+                        <DialogFooter>
+                            <Button type="submit">{editingPerson ? "Update Person" : "Save Person"}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -521,7 +903,7 @@ export default function ProjectsPage() {
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={handleDeleteConfirm}
-                title={`Delete ${deleteType === "project" ? "Project" : "Client"}`}
+                title={`Delete ${deleteType === "project" ? "Project" : deleteType === "client" ? "Client" : "Person"}`}
                 description={`Are you sure you want to delete "${itemToDelete?.name}"? This action cannot be undone.`}
             />
         </div>

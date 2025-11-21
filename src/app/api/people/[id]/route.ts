@@ -11,7 +11,7 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { name, role, email, status } = await request.json() as any;
+        const { name, role, email, phone, status } = await request.json() as any;
         const { env } = getCloudflareContext();
         const db = getDb(env);
         const personId = parseInt(params.id);
@@ -21,6 +21,7 @@ export async function PATCH(
                 name,
                 role,
                 email,
+                phone: (request as any).phone, // Add phone
                 status,
                 updatedAt: new Date(),
             })

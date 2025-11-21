@@ -53,6 +53,22 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
     const [taskAssigneeId, setTaskAssigneeId] = useState("none");
     const [taskDueDate, setTaskDueDate] = useState("");
 
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+
+    const filteredTasks = tasks.filter(task => {
+        const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
+
+    // Use filteredTasks instead of tasks for derived values
+    const tasksByStatus = {
+        todo: filteredTasks.filter(t => t.status === "todo"),
+        "in-progress": filteredTasks.filter(t => t.status === "in-progress"),
+        done: filteredTasks.filter(t => t.status === "done"),
+    };
+
     const openTaskDialog = (task?: Task) => {
         if (task) {
             setEditingTask(task);
@@ -74,28 +90,43 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
 
     const handleSaveTask = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!taskTitle.trim()) return;
+
         try {
-            const taskData = {
+            const payload = {
                 title: taskTitle,
-                status: taskStatus,
                 priority: taskPriority,
-                assigneeId: taskAssigneeId === "none" ? null : parseInt(taskAssigneeId),
+                status: taskStatus,
                 dueDate: taskDueDate || null,
+                assigneeId: taskAssigneeId === "none" ? null : (taskAssigneeId ? parseInt(taskAssigneeId) : null),
                 projectId,
+                type: "project",
             };
 
-            const url = editingTask ? `/api/tasks/${editingTask.id}` : "/api/tasks";
-            const method = editingTask ? "PATCH" : "POST";
-
-            const res = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(taskData),
-            });
-
-            if (res.ok) {
-                onTasksChange();
-                setTaskDialogOpen(false);
+            if (editingTask) {
+                // Update
+                const res = await fetch(`/api/tasks/${editingTask.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                if (res.ok) {
+                    setTaskDialogOpen(false);
+                    // resetForm(); // Assuming a resetForm function exists or state is reset on dialog close
+                    onTasksChange();
+                }
+            } else {
+                // Create
+                const res = await fetch("/api/tasks", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                if (res.ok) {
+                    setTaskDialogOpen(false);
+                    // resetForm(); // Assuming a resetForm function exists or state is reset on dialog close
+                    onTasksChange();
+                }
             }
         } catch (error) {
             console.error("Failed to save task", error);
@@ -118,40 +149,60 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
         return person?.name || "Unknown";
     };
 
-    const tasksByStatus = {
-        todo: tasks.filter(t => t.status === "todo"),
-        "in-progress": tasks.filter(t => t.status === "in-progress"),
-        done: tasks.filter(t => t.status === "done"),
-    };
+
 
     return (
         <div className="space-y-4">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Project Tasks</h3>
-                <div className="flex gap-2">
-                    {/* List/Board Toggle */}
-                    <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg flex">
-                        <Button
-                            variant={taskView === "list" ? "secondary" : "ghost"}
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => setTaskView("list")}
-                        >
-                            List
-                        </Button>
-                        <Button
-                            variant={taskView === "board" ? "secondary" : "ghost"}
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => setTaskView("board")}
-                        >
-                            Board
+            <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Project Tasks</h3>
+                    <div className="flex gap-2">
+                        {/* List/Board Toggle */}
+                        <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg flex">
+                            <Button
+                                variant={taskView === "list" ? "secondary" : "ghost"}
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => setTaskView("list")}
+                            >
+                                List
+                            </Button>
+                            <Button
+                                variant={taskView === "board" ? "secondary" : "ghost"}
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => setTaskView("board")}
+                            >
+                                Board
+                            </Button>
+                        </div>
+                        <Button onClick={() => openTaskDialog()}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Task
                         </Button>
                     </div>
-                    <Button onClick={() => openTaskDialog()}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Task
-                    </Button>
+                </div>
+
+                <div className="flex gap-4 items-center">
+                    <div className="flex-1">
+                        <Input
+                            placeholder="Search tasks..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="max-w-sm"
+                        />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="todo">To Do</SelectItem>
+                            <SelectItem value="in-progress">In Progress</SelectItem>
+                            <SelectItem value="done">Done</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
@@ -170,14 +221,14 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {tasks.length === 0 ? (
+                            {filteredTasks.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-gray-500">
-                                        No tasks yet
+                                        No tasks found
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                tasks.map((task) => (
+                                filteredTasks.map((task) => (
                                     <TableRow key={task.id}>
                                         <TableCell className="font-medium">{task.title}</TableCell>
                                         <TableCell>

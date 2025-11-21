@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,7 @@ interface Client {
 interface Person {
     id: number;
     name: string;
+    email: string;
     role: string;
 }
 
@@ -66,7 +67,7 @@ interface ProjectFile {
     size: number;
     type: string;
     url: string;
-    createdAt: string;
+    uploadedAt: string;
 }
 
 interface ChatMessage {
@@ -93,10 +94,37 @@ interface Note {
 export default function ProjectDetailsPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const id = params.id;
 
     // Core State
     const [project, setProject] = useState<Project | null>(null);
+    const [activeTab, setActiveTab] = useState("overview");
+
+    // Sync tab with URL
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value);
+        // Update URL without reload
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", value);
+        window.history.pushState({}, "", url);
+    };
+
+    // Data Fetching
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        if (id) {
+            fetchProject();
+            fetchTeamMembers();
+        }
+    }, [id]);
     const [tasks, setTasks] = useState<ProjectTask[]>([]);
     const [people, setPeople] = useState<Person[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
@@ -104,7 +132,6 @@ export default function ProjectDetailsPage() {
     const [notes, setNotes] = useState<Note[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("overview");
 
     // Edit Project Dialog State
     const [editProjectOpen, setEditProjectOpen] = useState(false);
@@ -125,6 +152,7 @@ export default function ProjectDetailsPage() {
     const chatEndRef = useRef<HTMLDivElement>(null);
 
     // Fetch Data
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (id) {
             fetchProject();
@@ -169,6 +197,7 @@ export default function ProjectDetailsPage() {
                 socket.close();
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, id]);
 
     // Auto-scroll chat

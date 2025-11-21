@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Note {
     id: number;
@@ -18,6 +20,16 @@ interface ProjectNotesProps {
 
 export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesProps) {
     const [newNote, setNewNote] = useState("");
+    const [search, setSearch] = useState("");
+    const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+
+    const filteredNotes = notes
+        .filter(note => note.content.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+        });
 
     const handleAddNote = async () => {
         if (!newNote.trim()) return;
@@ -62,11 +74,31 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
                 </Button>
             </div>
 
+            <div className="flex gap-4 items-center">
+                <div className="flex-1">
+                    <Input
+                        placeholder="Search notes..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="max-w-sm"
+                    />
+                </div>
+                <Select value={sortOrder} onValueChange={(val: "newest" | "oldest") => setSortOrder(val)}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="oldest">Oldest First</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
             <div className="space-y-3">
-                {notes.length === 0 ? (
-                    <p className="text-center text-gray-500 py-8">No notes yet</p>
+                {filteredNotes.length === 0 ? (
+                    <p className="text-center text-gray-500 py-8">No notes found</p>
                 ) : (
-                    notes.map((note) => (
+                    filteredNotes.map((note) => (
                         <Card key={note.id}>
                             <CardContent className="pt-4">
                                 <div className="flex justify-between items-start">
