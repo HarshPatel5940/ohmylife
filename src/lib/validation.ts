@@ -3,18 +3,18 @@
  */
 
 export const validateEmail = (email: string): boolean => {
-    if (!email) return true; // Empty is valid (optional field)
+    if (!email) return true;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
 export const validatePhone = (phone: string): boolean => {
-    if (!phone) return true; // Empty is valid (optional field)
-    // Allow digits, spaces, dashes, plus, and parentheses
+    if (!phone) return true;
+
     return /^[\d\s\-\+\(\)]+$/.test(phone);
 };
 
 export const validateDateRange = (startDate: string, endDate: string): boolean => {
-    if (!startDate || !endDate) return true; // If either is empty, skip validation
+    if (!startDate || !endDate) return true;
     return new Date(startDate) < new Date(endDate);
 };
 

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         const { env } = getCloudflareContext();
         const db = getDb(env);
         const { searchParams } = new URL(request.url);
-        const type = searchParams.get("type"); // "income" or "expense"
+        const type = searchParams.get("type");
 
         let allTransactions;
         if (type) {
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         const { env } = getCloudflareContext();
         const db = getDb(env);
 
-        // Auto-generate invoice number for income if not provided
+
         let finalInvoiceNumber = invoiceNumber;
         if (type === 'income' && !finalInvoiceNumber) {
             finalInvoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
@@ -67,13 +67,13 @@ export async function POST(request: Request) {
             amount: parsedAmount,
             category: category || (type === 'income' ? 'sales' : 'other'),
             date: new Date(),
-            // Income fields
+
             invoiceNumber: type === 'income' ? finalInvoiceNumber : null,
             clientId: type === 'income' && clientId ? parseInt(clientId) : null,
             amountReceived: type === 'income' ? parsedReceived : null,
             status: type === 'income' ? (status || 'draft') : null,
             dueDate: type === 'income' && dueDate ? new Date(dueDate) : null,
-            // Expense fields
+
             personId: type === 'expense' && personId ? parseInt(personId) : null,
             paymentMethod: type === 'expense' ? paymentMethod : null,
         }).returning();

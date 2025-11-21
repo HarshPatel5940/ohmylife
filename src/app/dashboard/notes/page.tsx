@@ -36,7 +36,7 @@ export default function NotesPage() {
     const [open, setOpen] = useState(false);
     const [editingNote, setEditingNote] = useState<Note | null>(null);
 
-    // Form State
+
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [projectId, setProjectId] = useState("");
@@ -99,11 +99,11 @@ export default function NotesPage() {
             };
 
             if (editingNote) {
-                // Update (Need to implement PATCH in API first, but assuming it exists or I will add it)
-                // Wait, I haven't implemented PATCH in route.ts yet! I should do that.
-                // For now, I'll use POST for create.
-                // Actually, I should add PATCH to route.ts.
-                // I will assume I will add it.
+
+
+
+
+
                 const res = await fetch(`/api/notes/${editingNote.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -145,7 +145,7 @@ export default function NotesPage() {
         }
     };
 
-    // Simple Rich Text Toolbar
+
     const insertFormat = (tag: string) => {
         const textarea = document.getElementById("note-content") as HTMLTextAreaElement;
         if (!textarea) return;
@@ -165,7 +165,7 @@ export default function NotesPage() {
         const newText = before + formatted + after;
         setContent(newText);
 
-        // Restore focus
+
         setTimeout(() => {
             textarea.focus();
             textarea.setSelectionRange(start + formatted.length, start + formatted.length);

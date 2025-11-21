@@ -11,14 +11,14 @@ export async function GET(request: Request) {
     const { env } = getCloudflareContext();
     const db = getDb(env);
 
-    // Check if any user exists
+
     const userCount = await db.select({ count: count() }).from(users);
 
     if (userCount[0].count > 0) {
         return NextResponse.json({ error: "Setup already completed" }, { status: 400 });
     }
 
-    // Create admin user
+
     const passwordHash = await hashPassword("admin123");
     const newUser = await db.insert(users).values({
         username: "admin",

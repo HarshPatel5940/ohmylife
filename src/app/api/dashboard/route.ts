@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         const { env } = getCloudflareContext();
         const db = getDb(env);
 
-        // Parallelize queries for better performance
+
         const [
             clientsCount,
             projectsCount,

@@ -37,7 +37,7 @@ export default function LeadsPage() {
     const [open, setOpen] = useState(false);
     const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
-    // Form State
+
     const [name, setName] = useState("");
     const [contactMode, setContactMode] = useState("");
     const [description, setDescription] = useState("");
@@ -110,7 +110,7 @@ export default function LeadsPage() {
                     resetForm();
                 }
             } else {
-                // Create
+
                 const res = await fetch("/api/leads", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -166,7 +166,7 @@ export default function LeadsPage() {
         e.preventDefault();
         if (!draggedLead || draggedLead.status === newStatus) return;
 
-        // Optimistic update
+
         const updatedLeads = leads.map(l =>
             l.id === draggedLead.id ? { ...l, status: newStatus } : l
         );
@@ -180,7 +180,7 @@ export default function LeadsPage() {
                 body: JSON.stringify({ status: newStatus }),
             });
             if (!res.ok) {
-                // Revert if failed
+
                 fetchLeads();
             }
         } catch (error) {

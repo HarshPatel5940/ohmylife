@@ -31,7 +31,7 @@ export default function NewProjectPage() {
     const [clients, setClients] = useState<Client[]>([]);
     const [clientId, setClientId] = useState("");
 
-    // Quick Create Client State
+
     const [clientDialogOpen, setClientDialogOpen] = useState(false);
     const [newClientName, setNewClientName] = useState("");
     const [newClientCompany, setNewClientCompany] = useState("");
@@ -72,10 +72,10 @@ export default function NewProjectPage() {
 
             if (res.ok) {
                 const newClient: Client = await res.json();
-                await fetchClients(); // Refresh list
-                setClientId(newClient.id.toString()); // Auto-select new client
+                await fetchClients();
+                setClientId(newClient.id.toString());
                 setClientDialogOpen(false);
-                // Reset form
+
                 setNewClientName("");
                 setNewClientCompany("");
                 setNewClientEmail("");
@@ -94,8 +94,8 @@ export default function NewProjectPage() {
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
-        // Add clientId to data
-        // Convert 'none' to null for clientId and parse to int if not null
+
+
         const processedClientId = clientId === "none" ? null : (clientId ? parseInt(clientId) : null);
 
         const projectData = {

@@ -34,7 +34,7 @@ export async function POST(request: Request) {
             name,
             role,
             email,
-            phone: (request as any).phone, // Add phone
+            phone: (request as any).phone,
             status: status || "active",
         }).returning();
 

@@ -21,11 +21,11 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const router = useRouter();
 
-    // Map routes to tab values
+
     const currentTab = pathname.split("/")[2] || "dashboard";
 
     const handleLogout = () => {
-        // TODO: Implement logout logic
+
         router.push("/login");
     };
 

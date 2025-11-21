@@ -5,7 +5,7 @@ import { verifyToken } from "@/lib/auth";
 export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
-    // Define protected routes
+
     if (path.startsWith("/dashboard")) {
         const token = request.cookies.get("token")?.value;
 

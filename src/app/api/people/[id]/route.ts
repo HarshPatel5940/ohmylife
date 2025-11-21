@@ -21,7 +21,7 @@ export async function PATCH(
                 name,
                 role,
                 email,
-                phone: (request as any).phone, // Add phone
+                phone: (request as any).phone,
                 status,
                 updatedAt: new Date(),
             })

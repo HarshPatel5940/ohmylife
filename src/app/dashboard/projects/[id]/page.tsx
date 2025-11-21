@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -97,11 +97,11 @@ export default function ProjectDetailsPage() {
     const searchParams = useSearchParams();
     const id = params.id;
 
-    // Core State
+
     const [project, setProject] = useState<Project | null>(null);
     const [activeTab, setActiveTab] = useState("overview");
 
-    // Sync tab with URL
+
     useEffect(() => {
         const tab = searchParams.get("tab");
         if (tab) {
@@ -111,20 +111,12 @@ export default function ProjectDetailsPage() {
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
-        // Update URL without reload
+
         const url = new URL(window.location.href);
         url.searchParams.set("tab", value);
         window.history.pushState({}, "", url);
     };
 
-    // Data Fetching
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        if (id) {
-            fetchProject();
-            fetchTeamMembers();
-        }
-    }, [id]);
     const [tasks, setTasks] = useState<ProjectTask[]>([]);
     const [people, setPeople] = useState<Person[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
@@ -133,7 +125,7 @@ export default function ProjectDetailsPage() {
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Edit Project Dialog State
+
     const [editProjectOpen, setEditProjectOpen] = useState(false);
     const [editName, setEditName] = useState("");
     const [editDescription, setEditDescription] = useState("");
@@ -142,39 +134,27 @@ export default function ProjectDetailsPage() {
     const [editStartDate, setEditStartDate] = useState("");
     const [editEndDate, setEditEndDate] = useState("");
 
-    // Delete Confirmation State
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    // Chat State
+
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
-    // Fetch Data
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        if (id) {
-            fetchProject();
-            fetchTasks();
-            fetchPeople();
-            fetchClients();
-            fetchFiles();
-            fetchNotes();
-            fetchTeamMembers();
-        }
-    }, [id]);
 
-    // Chat WebSocket Connection
+
+
     useEffect(() => {
         if (activeTab === "chat" && id && !socket) {
-            // Fetch history first
+
             fetch(`/api/projects/${id}/chat/messages`)
                 .then(res => res.json())
                 .then(data => setMessages(data as ChatMessage[]))
                 .catch(err => console.error("Failed to fetch chat history", err));
 
-            // Connect WebSocket
+
             const protocol = window.location.protocol === "https:" ? "wss" : "ws";
             const wsUrl = `${protocol}://${window.location.host}/api/projects/${id}/chat`;
             const ws = new WebSocket(wsUrl);
@@ -197,15 +177,15 @@ export default function ProjectDetailsPage() {
                 socket.close();
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [activeTab, id]);
 
-    // Auto-scroll chat
+
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    const fetchProject = async () => {
+    const fetchProject = useCallback(async () => {
         try {
             const res = await fetch(`/api/projects/${id}`);
             if (res.ok) {
@@ -217,9 +197,9 @@ export default function ProjectDetailsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
-    const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
         try {
             const res = await fetch(`/api/tasks?projectId=${id}`);
             if (res.ok) {
@@ -229,9 +209,9 @@ export default function ProjectDetailsPage() {
         } catch (error) {
             console.error("Failed to fetch tasks", error);
         }
-    };
+    }, [id]);
 
-    const fetchPeople = async () => {
+    const fetchPeople = useCallback(async () => {
         try {
             const res = await fetch("/api/people");
             if (res.ok) {
@@ -241,9 +221,9 @@ export default function ProjectDetailsPage() {
         } catch (error) {
             console.error("Failed to fetch people", error);
         }
-    };
+    }, []);
 
-    const fetchClients = async () => {
+    const fetchClients = useCallback(async () => {
         try {
             const res = await fetch("/api/clients");
             if (res.ok) {
@@ -253,9 +233,9 @@ export default function ProjectDetailsPage() {
         } catch (error) {
             console.error("Failed to fetch clients", error);
         }
-    };
+    }, []);
 
-    const fetchFiles = async () => {
+    const fetchFiles = useCallback(async () => {
         try {
             const res = await fetch(`/api/projects/${id}/files`);
             if (res.ok) {
@@ -265,9 +245,9 @@ export default function ProjectDetailsPage() {
         } catch (error) {
             console.error("Failed to fetch files", error);
         }
-    };
+    }, [id]);
 
-    const fetchNotes = async () => {
+    const fetchNotes = useCallback(async () => {
         try {
             const res = await fetch(`/api/projects/${id}/notes`);
             if (res.ok) {
@@ -277,9 +257,9 @@ export default function ProjectDetailsPage() {
         } catch (error) {
             console.error("Failed to fetch notes", error);
         }
-    };
+    }, [id]);
 
-    const fetchTeamMembers = async () => {
+    const fetchTeamMembers = useCallback(async () => {
         try {
             const res = await fetch(`/api/projects/${id}/team`);
             if (res.ok) {
@@ -289,7 +269,28 @@ export default function ProjectDetailsPage() {
         } catch (error) {
             console.error("Failed to fetch team members", error);
         }
-    };
+    }, [id]);
+
+
+    useEffect(() => {
+        if (id) {
+            fetchProject();
+            fetchTeamMembers();
+        }
+    }, [id, fetchProject, fetchTeamMembers]);
+
+
+    useEffect(() => {
+        if (id) {
+            fetchProject();
+            fetchTasks();
+            fetchPeople();
+            fetchClients();
+            fetchFiles();
+            fetchNotes();
+            fetchTeamMembers();
+        }
+    }, [id, fetchProject, fetchTasks, fetchPeople, fetchClients, fetchFiles, fetchNotes, fetchTeamMembers]);
 
     const openEditDialog = () => {
         if (!project) return;

@@ -37,6 +37,8 @@ export async function GET(
     }
 }
 
+import { cookies } from "next/headers";
+
 export async function POST(
     request: Request,
     { params }: { params: { id: string } }
@@ -47,10 +49,11 @@ export async function POST(
         const db = getDb(env);
         const projectId = parseInt(params.id);
 
-        // Get user from token
-        const token = request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+
+        const token = cookies().get("token")?.value;
         const payload = token ? await verifyToken(token) : null;
-        const userId = payload?.userId || null;
+        const userId = payload?.id || null;
+        const username = payload?.username || null;
 
         if (!content) {
             return NextResponse.json({ error: "Content is required" }, { status: 400 });
@@ -62,7 +65,10 @@ export async function POST(
             content,
         }).returning();
 
-        return NextResponse.json(newNote[0]);
+        return NextResponse.json({
+            ...newNote[0],
+            creatorName: username
+        });
     } catch (error) {
         console.error(error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

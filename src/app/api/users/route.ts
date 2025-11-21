@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         const { env } = getCloudflareContext();
         const db = getDb(env);
 
-        // Exclude password hash from response
+
         const allUsers = await db.select({
             id: users.id,
             username: users.username,

@@ -13,17 +13,17 @@ export async function GET(request: Request) {
 
         const allClients = await db.select().from(clients).where(isNull(clients.deletedAt)).orderBy(desc(clients.createdAt));
 
-        // Fetch project counts and revenue for each client
+
         const clientsWithStats = await Promise.all(
             allClients.map(async (client) => {
-                // Get project count
+
                 const projectCount = await db
                     .select({ count: sql<number>`count(*)` })
                     .from(projects)
                     .where(and(eq(projects.clientId, client.id), isNull(projects.deletedAt)))
                     .then(res => res[0]?.count || 0);
 
-                // Get total revenue
+
                 const revenueResult = await db
                     .select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` })
                     .from(transactions)

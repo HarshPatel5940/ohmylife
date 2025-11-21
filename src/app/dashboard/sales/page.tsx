@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Input } from "@/components/ui/input";
@@ -63,11 +63,11 @@ export default function SalesPage() {
 
     const [clients, setClients] = useState<Client[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
-    const [timeFilter, setTimeFilter] = useState<string>("30d"); // 30d, 3m, 1y, fy, cy
+    const [timeFilter, setTimeFilter] = useState<string>("30d");
 
-    // Form State
-    const [type, setType] = useState("income"); // income or expense
-    const [subType, setSubType] = useState("invoice"); // invoice or sale (for income)
+
+    const [type, setType] = useState("income");
+    const [subType, setSubType] = useState("invoice");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
     const [amountReceived, setAmountReceived] = useState("");
@@ -79,29 +79,10 @@ export default function SalesPage() {
     const [category, setCategory] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("");
 
-    useEffect(() => {
-        fetchSales();
-        fetchClients();
-        fetchProjects();
-    }, []);
-
-    useEffect(() => {
-        fetchSales();
-    }, [timeFilter]);
-
-    useEffect(() => {
-        // Auto-generate invoice number when switching to invoice subType for new transactions
-        if (subType === 'invoice' && !editingSale && !invoiceNumber) {
-            setInvoiceNumber(generateInvoiceNumber());
-        }
-        // Clear invoice number when switching to direct sale
-        if (subType === 'sale') {
-            setInvoiceNumber('');
-        }
-    }, [subType]);
 
 
-    const fetchSales = async () => {
+
+    const fetchSales = useCallback(async () => {
         try {
             const url = `/api/transactions?timeFilter=${timeFilter}`;
             const res = await fetch(url);
@@ -112,9 +93,9 @@ export default function SalesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [timeFilter]);
 
-    const fetchClients = async () => {
+    const fetchClients = useCallback(async () => {
         try {
             const res = await fetch("/api/clients");
             if (res.ok) {
@@ -124,9 +105,9 @@ export default function SalesPage() {
         } catch (error) {
             console.error("Failed to fetch clients", error);
         }
-    };
+    }, []);
 
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         try {
             const res = await fetch("/api/projects");
             if (res.ok) {
@@ -136,33 +117,54 @@ export default function SalesPage() {
         } catch (error) {
             console.error("Failed to fetch projects", error);
         }
-    };
+    }, []);
 
-    const generateInvoiceNumber = () => {
+    const generateInvoiceNumber = useCallback(() => {
         const today = new Date();
         const day = String(today.getDate()).padStart(2, '0');
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const year = today.getFullYear();
         const datePrefix = `${day}${month}${year}`;
 
-        // Find all invoices from today
+
         const todayInvoices = sales.filter(s => {
             if (!s.invoiceNumber) return false;
             return s.invoiceNumber.startsWith(datePrefix);
         });
 
-        // Get the next sequence number
-        const nextSequence = todayInvoices.length + 1;
-        const sequenceStr = String(nextSequence).padStart(2, '0');
+
+        const sequence = todayInvoices.length + 1;
+        const sequenceStr = String(sequence).padStart(2, '0');
 
         return `${datePrefix}${sequenceStr}`;
-    };
+    }, [sales]);
+
+    useEffect(() => {
+        fetchSales();
+        fetchClients();
+        fetchProjects();
+    }, [fetchSales, fetchClients, fetchProjects]);
+
+    useEffect(() => {
+        fetchSales();
+    }, [fetchSales]);
+
+    useEffect(() => {
+
+        if (subType === 'invoice' && !editingSale && !invoiceNumber) {
+            setInvoiceNumber(generateInvoiceNumber());
+        }
+
+        if (subType === 'sale') {
+            setInvoiceNumber('');
+        }
+    }, [subType, editingSale, invoiceNumber, generateInvoiceNumber]);
 
     const openDialog = (sale?: Sale) => {
         if (sale) {
             setEditingSale(sale);
             setType(sale.type);
-            // Determine subType: if it has invoiceNumber it's invoice, otherwise it's direct sale
+
             setSubType(sale.invoiceNumber ? "invoice" : "sale");
             setDescription(sale.description);
             setAmount(sale.amount.toString());
@@ -176,7 +178,7 @@ export default function SalesPage() {
             setPaymentMethod(sale.paymentMethod || "");
         } else {
             resetForm();
-            // Auto-generate invoice number for new invoices
+
             if (subType === 'invoice') {
                 setInvoiceNumber(generateInvoiceNumber());
             }
@@ -219,7 +221,7 @@ export default function SalesPage() {
             };
 
             if (editingSale) {
-                // Update
+
                 const res = await fetch(`/ api / sales / ${editingSale.id} `, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -231,7 +233,7 @@ export default function SalesPage() {
                     fetchSales();
                 }
             } else {
-                // Create
+
                 const res = await fetch("/api/sales", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -426,7 +428,7 @@ export default function SalesPage() {
                                     <Label htmlFor="project" className="text-right">Project</Label>
                                     <Select value={projectId} onValueChange={(val) => {
                                         setProjectId(val);
-                                        // Auto-populate client from project
+
                                         const project = projects.find(p => p.id === parseInt(val));
                                         if (project) {
                                             setClientId(project.clientId.toString());

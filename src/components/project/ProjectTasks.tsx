@@ -62,7 +62,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
         return matchesSearch && matchesStatus;
     });
 
-    // Use filteredTasks instead of tasks for derived values
+
     const tasksByStatus = {
         todo: filteredTasks.filter(t => t.status === "todo"),
         "in-progress": filteredTasks.filter(t => t.status === "in-progress"),
@@ -104,7 +104,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
             };
 
             if (editingTask) {
-                // Update
+
                 const res = await fetch(`/api/tasks/${editingTask.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -112,11 +112,11 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                 });
                 if (res.ok) {
                     setTaskDialogOpen(false);
-                    // resetForm(); // Assuming a resetForm function exists or state is reset on dialog close
+
                     onTasksChange();
                 }
             } else {
-                // Create
+
                 const res = await fetch("/api/tasks", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -124,7 +124,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                 });
                 if (res.ok) {
                     setTaskDialogOpen(false);
-                    // resetForm(); // Assuming a resetForm function exists or state is reset on dialog close
+
                     onTasksChange();
                 }
             }

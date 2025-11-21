@@ -43,21 +43,21 @@ export async function POST(
         const db = getDb(env);
         const projectId = parseInt(params.id);
 
-        // Generate unique key
+
         const key = `projects/${projectId}/${Date.now()}-${file.name}`;
 
-        // Upload to R2
+
         await env.BUCKET.put(key, file);
 
-        // Save metadata to D1
+
         const newFile = await db.insert(files).values({
             projectId,
             name: file.name,
             key: key,
             size: file.size,
             type: file.type,
-            url: `/api/files/${key}`, // Proxy URL or public URL if configured
-            uploadedBy: 1, // TODO: Get actual user ID from session
+            url: `/api/files/${key}`,
+            uploadedBy: 1,
         }).returning();
 
         return NextResponse.json(newFile[0]);

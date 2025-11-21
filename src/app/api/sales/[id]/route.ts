@@ -27,14 +27,14 @@ export async function PATCH(
         if (category !== undefined) updateData.category = category;
         if (type !== undefined) updateData.type = type;
 
-        // Income specific
+
         if (invoiceNumber !== undefined) updateData.invoiceNumber = invoiceNumber;
         if (clientId !== undefined) updateData.clientId = clientId ? parseInt(clientId) : null;
         if (amountReceived !== undefined) updateData.amountReceived = parseFloat(amountReceived);
         if (status !== undefined) updateData.status = status;
         if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
 
-        // Expense specific
+
         if (personId !== undefined) updateData.personId = personId ? parseInt(personId) : null;
         if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
 

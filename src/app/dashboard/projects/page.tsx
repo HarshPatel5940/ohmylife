@@ -66,7 +66,7 @@ export default function ProjectsPage() {
     const [statusFilter, setStatusFilter] = useState("all");
     const [activeTab, setActiveTab] = useState("projects");
 
-    // Client dialog state
+
     const [clientDialogOpen, setClientDialogOpen] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | null>(null);
     const [clientName, setClientName] = useState("");
@@ -74,7 +74,7 @@ export default function ProjectsPage() {
     const [clientEmail, setClientEmail] = useState("");
     const [clientPhone, setClientPhone] = useState("");
 
-    // People state
+
     const [people, setPeople] = useState<Person[]>([]);
     const [personDialogOpen, setPersonDialogOpen] = useState(false);
     const [editingPerson, setEditingPerson] = useState<Person | null>(null);
@@ -84,7 +84,7 @@ export default function ProjectsPage() {
     const [personPhone, setPersonPhone] = useState("");
     const [personStatus, setPersonStatus] = useState("active");
 
-    // Delete confirmation dialog state
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deleteType, setDeleteType] = useState<"project" | "client" | "person">("project");
     const [itemToDelete, setItemToDelete] = useState<any>(null);
@@ -271,7 +271,7 @@ export default function ProjectsPage() {
         );
     }, [people, search]);
 
-    // Update delete handler
+
     const openDeleteDialog = (type: "project" | "client" | "person", item: any) => {
         setDeleteType(type);
         setItemToDelete(item);

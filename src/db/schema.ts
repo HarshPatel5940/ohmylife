@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// Helper for timestamps and soft delete
+
 const timestamps = {
     createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
@@ -34,7 +34,7 @@ export const people = sqliteTable("people", {
     phone: text("phone"),
     status: text("status", { enum: ["hiring", "active", "inactive", "terminated"] }).default("hiring").notNull(),
     hourlyRate: integer("hourly_rate"),
-    projectId: integer("project_id"), // Circular dependency if referencing projects directly here, usually people exist independently or linked via junction. But if needed: .references(() => projects.id) - careful with order.
+    projectId: integer("project_id"),
     ...timestamps,
 });
 
@@ -52,36 +52,36 @@ export const projects = sqliteTable("projects", {
 export const leads = sqliteTable("leads", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
-    contactMode: text("contact_mode"), // Email, Phone, LinkedIn, Referral, etc.
+    contactMode: text("contact_mode"),
     description: text("description"),
     status: text("status", { enum: ["new", "contacted", "lost", "won"] }).default("new").notNull(),
-    value: integer("value"), // Potential deal value in cents
+    value: integer("value"),
     ...timestamps,
 });
 
-// Unified financial transactions - income (sales/invoices) and expenses
+
 export const transactions = sqliteTable("transactions", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     type: text("type", { enum: ["income", "expense"] }).notNull(),
 
-    // Common fields
+
     description: text("description").notNull(),
     amount: integer("amount").notNull(),
     date: integer("date", { mode: "timestamp" }).notNull(),
-    category: text("category"), // "sales", "salary", "office", "equipment", etc.
+    category: text("category"),
 
-    // Project and Client references
+
     projectId: integer("project_id").references(() => projects.id),
-    clientId: integer("client_id").references(() => clients.id), // Nullable, can be inferred from project
+    clientId: integer("client_id").references(() => clients.id),
 
-    // Income specific (invoices/sales)
+
     invoiceNumber: text("invoice_number"),
     amountReceived: integer("amount_received").default(0),
     status: text("status", { enum: ["draft", "sent", "paid", "partial", "overdue", "cancelled"] }),
     dueDate: integer("due_date", { mode: "timestamp" }),
 
-    // Expense specific
-    personId: integer("person_id").references(() => people.id), // For salary
+
+    personId: integer("person_id").references(() => people.id),
     paymentMethod: text("payment_method", { enum: ["cash", "bank", "card", "upi"] }),
 
     ...timestamps,
@@ -113,7 +113,7 @@ export const files = sqliteTable("files", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     projectId: integer("project_id").references(() => projects.id),
     name: text("name").notNull(),
-    key: text("key").notNull(), // R2 key
+    key: text("key").notNull(),
     size: integer("size").notNull(),
     type: text("type").notNull(),
     url: text("url"),

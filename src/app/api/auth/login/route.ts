@@ -18,8 +18,8 @@ export async function POST(request: Request) {
         const { env } = getCloudflareContext();
         const db = getDb(env);
 
-        // D1 select returns an array or use .get() if using drizzle-orm/d1 proxy
-        // But standard drizzle-orm/d1 usage:
+
+
         const user = await db.select().from(users).where(eq(users.username, username)).get();
 
         if (!user) {
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            maxAge: 60 * 60 * 24, // 1 day
+            maxAge: 60 * 60 * 24,
         });
 
         return response;

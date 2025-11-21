@@ -12,10 +12,10 @@ export async function GET(request: Request) {
     const db = getDb(env);
 
     try {
-        // Delete existing admin if any
+
         await db.delete(users).where(eq(users.username, "admin"));
 
-        // Create admin user
+
         const passwordHash = await hashPassword("admin123");
         const newUser = await db.insert(users).values({
             username: "admin",

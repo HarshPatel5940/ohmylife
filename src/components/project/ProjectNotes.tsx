@@ -133,7 +133,7 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
                         <Card key={note.id}>
                             <CardContent className="pt-4">
                                 {editingNoteId === note.id ? (
-                                    // Edit mode
+
                                     <>
                                         <Textarea
                                             value={editContent}
@@ -158,7 +158,7 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
                                         </div>
                                     </>
                                 ) : (
-                                    // View mode
+
                                     <>
                                         <div className="flex justify-between items-start">
                                             <p className="flex-1 whitespace-pre-wrap">{note.content}</p>

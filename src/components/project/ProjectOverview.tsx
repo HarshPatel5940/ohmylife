@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CheckSquare, DollarSign } from "lucide-react";
 
@@ -35,20 +35,18 @@ export function ProjectOverview({ project, clientName }: ProjectOverviewProps) {
     const [transactionStats, setTransactionStats] = useState<TransactionStats>({ count: 0, totalValue: 0 });
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchStats();
-    }, [project.id]);
 
-    const fetchStats = async () => {
+
+    const fetchStats = useCallback(async () => {
         try {
-            // Fetch team members
+
             const teamRes = await fetch(`/api/projects/${project.id}/team`);
             if (teamRes.ok) {
                 const teamData = await teamRes.json() as any[];
                 setTeamCount(teamData.length);
             }
 
-            // Fetch tasks
+
             const tasksRes = await fetch(`/api/tasks?projectId=${project.id}`);
             if (tasksRes.ok) {
                 const tasksData = await tasksRes.json() as any[];
@@ -58,7 +56,7 @@ export function ProjectOverview({ project, clientName }: ProjectOverviewProps) {
                 setTaskStats({ total, pending, completed });
             }
 
-            // Fetch transactions
+
             const transactionsRes = await fetch(`/api/transactions?projectId=${project.id}`);
             if (transactionsRes.ok) {
                 const transactionsData = await transactionsRes.json() as any[];
@@ -73,7 +71,11 @@ export function ProjectOverview({ project, clientName }: ProjectOverviewProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [project.id]);
+
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
 
     return (
         <div className="space-y-6">

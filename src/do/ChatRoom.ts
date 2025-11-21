@@ -1,4 +1,3 @@
-/// <reference path="../../cloudflare-env.d.ts" />
 import { getDb } from "@/lib/db";
 import { chatMessages } from "@/db/schema";
 import { DurableObject } from "cloudflare:workers";
@@ -38,9 +37,9 @@ export class ChatRoom extends DurableObject {
         webSocket.addEventListener("message", async (event) => {
             try {
                 const data = JSON.parse(event.data as string);
-                // data: { projectId, userId, content, senderName }
 
-                // Save to DB
+
+
                 const db = getDb(this.env);
                 const newMessage = await db.insert(chatMessages).values({
                     projectId: data.projectId,
@@ -49,7 +48,7 @@ export class ChatRoom extends DurableObject {
                     createdAt: new Date(),
                 }).returning();
 
-                // Broadcast to all
+
                 const broadcastData = JSON.stringify({
                     ...newMessage[0],
                     senderName: data.senderName

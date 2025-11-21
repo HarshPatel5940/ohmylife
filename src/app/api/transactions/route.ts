@@ -15,9 +15,9 @@ export async function GET(request: Request) {
         const clientId = searchParams.get("clientId");
         const projectId = searchParams.get("projectId");
         const type = searchParams.get("type");
-        const timeFilter = searchParams.get("timeFilter"); // "30d", "3m", "1y", "fy", "cy"
+        const timeFilter = searchParams.get("timeFilter");
 
-        // Calculate date range based on time filter
+
         let startDate: Date | null = null;
         const now = new Date();
 
@@ -35,21 +35,21 @@ export async function GET(request: Request) {
                     startDate = new Date(now);
                     startDate.setFullYear(startDate.getFullYear() - 1);
                     break;
-                case "fy": // Financial Year (April to March)
+                case "fy":
                     const currentMonth = now.getMonth();
                     const currentYear = now.getFullYear();
-                    // If current month is Jan-Mar, FY started last year in April
-                    // If current month is Apr-Dec, FY started this year in April
+
+
                     const fyStartYear = currentMonth < 3 ? currentYear - 1 : currentYear;
-                    startDate = new Date(fyStartYear, 3, 1); // April 1st
+                    startDate = new Date(fyStartYear, 3, 1);
                     break;
-                case "cy": // Calendar Year (January to December)
-                    startDate = new Date(now.getFullYear(), 0, 1); // January 1st
+                case "cy":
+                    startDate = new Date(now.getFullYear(), 0, 1);
                     break;
             }
         }
 
-        // Build query conditions
+
         const conditions = [isNull(transactions.deletedAt)];
 
         if (clientId) {
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
         const { env } = getCloudflareContext();
         const db = getDb(env);
 
-        // If projectId is provided, fetch the project to get clientId
+
         let finalClientId = clientId;
         if (projectId && !clientId) {
             const project = await db.select({ clientId: projects.clientId })

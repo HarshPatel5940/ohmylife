@@ -31,7 +31,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
         const db = getDb(env);
         const id = parseInt(params.id);
 
-        // Soft delete
+
         await db.update(projects)
             .set({ deletedAt: new Date() })
             .where(eq(projects.id, id));

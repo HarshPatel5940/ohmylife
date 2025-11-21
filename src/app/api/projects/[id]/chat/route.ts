@@ -14,7 +14,7 @@ export async function GET(
         const id = env.CHAT_ROOM.idFromName(projectId);
         const stub = env.CHAT_ROOM.get(id);
 
-        // Forward the request to the Durable Object
+
         const url = new URL(request.url);
         url.pathname = "/websocket";
 

@@ -15,17 +15,17 @@ export async function DELETE(
         const db = getDb(env);
         const fileId = parseInt(params.fileId);
 
-        // Get file info first
+
         const file = await db.select().from(files).where(eq(files.id, fileId)).get();
 
         if (!file) {
             return NextResponse.json({ error: "File not found" }, { status: 404 });
         }
 
-        // Delete from R2
+
         await env.BUCKET.delete(file.key);
 
-        // Delete from D1
+
         await db.delete(files).where(eq(files.id, fileId));
 
         return NextResponse.json({ success: true });

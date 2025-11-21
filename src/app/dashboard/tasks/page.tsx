@@ -25,7 +25,7 @@ export default function TasksPage() {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
 
-    // Form State
+
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -75,7 +75,7 @@ export default function TasksPage() {
             };
 
             if (editingTask) {
-                // Update
+
                 const res = await fetch(`/api/tasks/${editingTask.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
@@ -87,7 +87,7 @@ export default function TasksPage() {
                     fetchTasks();
                 }
             } else {
-                // Create
+
                 const res = await fetch("/api/tasks", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -176,7 +176,7 @@ export default function TasksPage() {
         e.preventDefault();
         if (!draggedTask || draggedTask.status === newStatus) return;
 
-        // Optimistic update
+
         const updatedTasks = tasks.map(t =>
             t.id === draggedTask.id ? { ...t, status: newStatus } : t
         );
