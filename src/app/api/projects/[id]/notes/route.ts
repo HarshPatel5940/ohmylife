@@ -1,8 +1,9 @@
 import { getDb } from "@/lib/db";
-import { notes } from "@/db/schema";
+import { notes, users } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull, eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
 
 export const runtime = "edge";
 
@@ -15,8 +16,18 @@ export async function GET(
         const db = getDb(env);
         const projectId = parseInt(params.id);
 
-        const projectNotes = await db.select()
+        const projectNotes = await db.select({
+            id: notes.id,
+            projectId: notes.projectId,
+            userId: notes.userId,
+            title: notes.title,
+            content: notes.content,
+            createdAt: notes.createdAt,
+            updatedAt: notes.updatedAt,
+            creatorName: users.username,
+        })
             .from(notes)
+            .leftJoin(users, eq(notes.userId, users.id))
             .where(and(eq(notes.projectId, projectId), isNull(notes.deletedAt)))
             .orderBy(desc(notes.createdAt));
 
@@ -36,12 +47,18 @@ export async function POST(
         const db = getDb(env);
         const projectId = parseInt(params.id);
 
+        // Get user from token
+        const token = request.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+        const payload = token ? await verifyToken(token) : null;
+        const userId = payload?.userId || null;
+
         if (!content) {
             return NextResponse.json({ error: "Content is required" }, { status: 400 });
         }
 
         const newNote = await db.insert(notes).values({
             projectId,
+            userId,
             content,
         }).returning();
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -10,6 +10,7 @@ interface Note {
     id: number;
     content: string;
     createdAt: string;
+    creatorName?: string;
 }
 
 interface ProjectNotesProps {
@@ -22,6 +23,8 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
     const [newNote, setNewNote] = useState("");
     const [search, setSearch] = useState("");
     const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+    const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+    const [editContent, setEditContent] = useState("");
 
     const filteredNotes = notes
         .filter(note => note.content.toLowerCase().includes(search.toLowerCase()))
@@ -46,6 +49,34 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
         } catch (error) {
             console.error("Failed to add note", error);
         }
+    };
+
+    const handleEditNote = (note: Note) => {
+        setEditingNoteId(note.id);
+        setEditContent(note.content);
+    };
+
+    const handleSaveEdit = async (noteId: number) => {
+        if (!editContent.trim()) return;
+        try {
+            const res = await fetch(`/api/projects/${projectId}/notes/${noteId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: editContent }),
+            });
+            if (res.ok) {
+                setEditingNoteId(null);
+                setEditContent("");
+                onNotesChange();
+            }
+        } catch (error) {
+            console.error("Failed to update note", error);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingNoteId(null);
+        setEditContent("");
     };
 
     const handleDeleteNote = async (noteId: number) => {
@@ -101,19 +132,61 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
                     filteredNotes.map((note) => (
                         <Card key={note.id}>
                             <CardContent className="pt-4">
-                                <div className="flex justify-between items-start">
-                                    <p className="flex-1 whitespace-pre-wrap">{note.content}</p>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDeleteNote(note.id)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    {new Date(note.createdAt).toLocaleString()}
-                                </p>
+                                {editingNoteId === note.id ? (
+                                    // Edit mode
+                                    <>
+                                        <Textarea
+                                            value={editContent}
+                                            onChange={(e) => setEditContent(e.target.value)}
+                                            className="mb-3"
+                                            rows={4}
+                                        />
+                                        <div className="flex gap-2 justify-end">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={handleCancelEdit}
+                                            >
+                                                <X className="h-4 w-4 mr-1" /> Cancel
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleSaveEdit(note.id)}
+                                            >
+                                                <Check className="h-4 w-4 mr-1" /> Save
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    // View mode
+                                    <>
+                                        <div className="flex justify-between items-start">
+                                            <p className="flex-1 whitespace-pre-wrap">{note.content}</p>
+                                            <div className="flex gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleEditNote(note)}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDeleteNote(note.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            {new Date(note.createdAt).toLocaleString()}
+                                            {note.creatorName && (
+                                                <span className="ml-2">• by {note.creatorName}</span>
+                                            )}
+                                        </p>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     ))

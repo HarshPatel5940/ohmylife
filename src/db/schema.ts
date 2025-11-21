@@ -90,6 +90,7 @@ export const transactions = sqliteTable("transactions", {
 export const notes = sqliteTable("notes", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     projectId: integer("project_id").references(() => projects.id),
+    userId: integer("user_id").references(() => users.id),
     title: text("title"),
     content: text("content").notNull(),
     ...timestamps,

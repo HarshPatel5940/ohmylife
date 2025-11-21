@@ -27,32 +27,32 @@ export default function LandingPage() {
 
         {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mb-12">
-          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-            <Briefcase className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400" />
+          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-center">
+            <Briefcase className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400 mx-auto" />
             <h3 className="font-semibold mb-2">Projects</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Track projects, tasks, and team collaboration
             </p>
           </div>
 
-          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-            <Users className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400" />
+          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-center">
+            <Users className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400 mx-auto" />
             <h3 className="font-semibold mb-2">CRM</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Manage clients, leads, and sales pipeline
             </p>
           </div>
 
-          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-            <DollarSign className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400" />
+          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-center">
+            <DollarSign className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400 mx-auto" />
             <h3 className="font-semibold mb-2">Finance</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Invoices, transactions, and financial tracking
             </p>
           </div>
 
-          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-            <CheckSquare className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400" />
+          <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-center">
+            <CheckSquare className="h-8 w-8 mb-3 text-blue-600 dark:text-blue-400 mx-auto" />
             <h3 className="font-semibold mb-2">Tasks</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Kanban boards and task management

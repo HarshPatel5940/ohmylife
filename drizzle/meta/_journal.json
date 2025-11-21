@@ -8,6 +8,13 @@
       "when": 1763736121111,
       "tag": "0000_sour_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1763738002368,
+      "tag": "0001_violet_the_watchers",
+      "breakpoints": true
     }
   ]
 }
