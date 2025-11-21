@@ -17,6 +17,7 @@ export async function GET(request: Request) {
         let query = db.select({
             id: tasks.id,
             title: tasks.title,
+            description: tasks.description,
             status: tasks.status,
             priority: tasks.priority,
             dueDate: tasks.dueDate,
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { title, priority, status, dueDate, type, projectId, assigneeId } = await request.json() as any;
+        const { title, description, priority, status, dueDate, type, projectId, assigneeId } = await request.json() as any;
 
         if (!title) {
             return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
 
         const newTask = await db.insert(tasks).values({
             title,
+            description: description || null,
             priority: priority || "medium",
             status: status || "todo",
             dueDate: dueDate ? new Date(dueDate) : null,

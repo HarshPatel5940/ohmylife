@@ -98,6 +98,7 @@ export const notes = sqliteTable("notes", {
 export const tasks = sqliteTable("tasks", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     title: text("title").notNull(),
+    description: text("description"),
     type: text("type", { enum: ["personal", "project"] }).default("personal").notNull(),
     status: text("status", { enum: ["todo", "in_progress", "done", "blocked"] }).default("todo").notNull(),
     priority: text("priority", { enum: ["low", "medium", "high"] }).default("medium"),

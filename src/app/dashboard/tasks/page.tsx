@@ -16,6 +16,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -27,6 +28,7 @@ export default function TasksPage() {
     // Form State
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
     const [priority, setPriority] = useState("medium");
     const [status, setStatus] = useState("todo");
     const [dueDate, setDueDate] = useState("");
@@ -65,6 +67,7 @@ export default function TasksPage() {
         try {
             const payload = {
                 title,
+                description,
                 priority,
                 status,
                 dueDate: dueDate || null,
@@ -118,6 +121,7 @@ export default function TasksPage() {
     const handleEdit = useCallback((task: Task) => {
         setEditingTask(task);
         setTitle(task.title);
+        setDescription(task.description || "");
         setPriority(task.priority);
         setStatus(task.status);
         setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "");
@@ -127,9 +131,29 @@ export default function TasksPage() {
     const resetForm = () => {
         setEditingTask(null);
         setTitle("");
+        setDescription("");
         setPriority("medium");
         setStatus("todo");
         setDueDate("");
+    };
+
+    const getPriorityColor = (priority: string) => {
+        switch (priority) {
+            case "high": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+            case "medium": return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+            case "low": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+            default: return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "done": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+            case "in_progress": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+            case "todo": return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+            case "blocked": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+            default: return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+        }
     };
 
     const columns = useMemo(() => getColumns({
@@ -180,15 +204,6 @@ export default function TasksPage() {
         { id: "done", label: "Done" },
     ];
 
-    const getPriorityColor = (priority: string) => {
-        switch (priority) {
-            case "high": return "text-red-600 bg-red-50 dark:bg-red-900/20";
-            case "medium": return "text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20";
-            case "low": return "text-green-600 bg-green-50 dark:bg-green-900/20";
-            default: return "text-gray-600 bg-gray-50 dark:bg-gray-900/20";
-        }
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4">
@@ -229,6 +244,19 @@ export default function TasksPage() {
                                                 onChange={(e) => setTitle(e.target.value)}
                                                 className="col-span-3"
                                                 required
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-start gap-4">
+                                            <Label htmlFor="description" className="text-right pt-2">
+                                                Description
+                                            </Label>
+                                            <Textarea
+                                                id="description"
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}
+                                                className="col-span-3"
+                                                rows={3}
+                                                placeholder="Optional task description..."
                                             />
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
@@ -315,7 +343,7 @@ export default function TasksPage() {
                         {boardColumns.map(col => (
                             <div
                                 key={col.id}
-                                className="min-w-[300px] w-full bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex flex-col gap-3"
+                                className="min-w-[300px] w-full bg-gray-100 dark:bg-gray-800/50 rounded-lg p-4 flex flex-col gap-3"
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, col.id)}
                             >
@@ -338,12 +366,20 @@ export default function TasksPage() {
                                             <div className="flex justify-between items-start mb-2">
                                                 <h4 className="font-medium text-sm line-clamp-2">{task.title}</h4>
                                             </div>
-                                            <div className="flex justify-between items-center mt-3">
+                                            {task.description && (
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
+                                                    {task.description}
+                                                </p>
+                                            )}
+                                            <div className="flex gap-2 items-center mt-3 flex-wrap">
                                                 <span className={`text-[10px] px-2 py-0.5 rounded font-medium uppercase tracking-wide ${getPriorityColor(task.priority)}`}>
                                                     {task.priority}
                                                 </span>
+                                                <span className={`text-[10px] px-2 py-0.5 rounded font-medium uppercase tracking-wide ${getStatusColor(task.status)}`}>
+                                                    {task.status.replace('_', ' ')}
+                                                </span>
                                                 {task.dueDate && (
-                                                    <span className="text-xs text-gray-400">
+                                                    <span className="text-xs text-gray-400 ml-auto">
                                                         {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                     </span>
                                                 )}

@@ -11,7 +11,7 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { title, priority, status, dueDate, assigneeId } = await request.json() as any;
+        const { title, description, priority, status, dueDate, assigneeId } = await request.json() as any;
         const { env } = getCloudflareContext();
         const db = getDb(env);
         const taskId = parseInt(params.id);
@@ -19,6 +19,7 @@ export async function PATCH(
         const updatedTask = await db.update(tasks)
             .set({
                 title,
+                description,
                 priority,
                 status,
                 dueDate: dueDate ? new Date(dueDate) : null,

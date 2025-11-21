@@ -89,6 +89,18 @@ export default function SalesPage() {
         fetchSales();
     }, [timeFilter]);
 
+    useEffect(() => {
+        // Auto-generate invoice number when switching to invoice subType for new transactions
+        if (subType === 'invoice' && !editingSale && !invoiceNumber) {
+            setInvoiceNumber(generateInvoiceNumber());
+        }
+        // Clear invoice number when switching to direct sale
+        if (subType === 'sale') {
+            setInvoiceNumber('');
+        }
+    }, [subType]);
+
+
     const fetchSales = async () => {
         try {
             const url = `/api/transactions?timeFilter=${timeFilter}`;
@@ -126,10 +138,31 @@ export default function SalesPage() {
         }
     };
 
+    const generateInvoiceNumber = () => {
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        const datePrefix = `${day}${month}${year}`;
+
+        // Find all invoices from today
+        const todayInvoices = sales.filter(s => {
+            if (!s.invoiceNumber) return false;
+            return s.invoiceNumber.startsWith(datePrefix);
+        });
+
+        // Get the next sequence number
+        const nextSequence = todayInvoices.length + 1;
+        const sequenceStr = String(nextSequence).padStart(2, '0');
+
+        return `${datePrefix}${sequenceStr}`;
+    };
+
     const openDialog = (sale?: Sale) => {
         if (sale) {
             setEditingSale(sale);
             setType(sale.type);
+            // Determine subType: if it has invoiceNumber it's invoice, otherwise it's direct sale
             setSubType(sale.invoiceNumber ? "invoice" : "sale");
             setDescription(sale.description);
             setAmount(sale.amount.toString());
@@ -143,6 +176,10 @@ export default function SalesPage() {
             setPaymentMethod(sale.paymentMethod || "");
         } else {
             resetForm();
+            // Auto-generate invoice number for new invoices
+            if (subType === 'invoice') {
+                setInvoiceNumber(generateInvoiceNumber());
+            }
         }
         setOpen(true);
     };
@@ -172,8 +209,8 @@ export default function SalesPage() {
                 amount,
                 date: new Date().toISOString(),
                 category: type === 'income' ? 'sales' : category,
-                amountReceived: subType === 'sale' ? amount : amountReceived,
-                status: subType === 'sale' ? 'paid' : status,
+                amountReceived: amountReceived || undefined,
+                status: status,
                 dueDate,
                 invoiceNumber: subType === 'invoice' ? invoiceNumber : undefined,
                 projectId: projectId ? parseInt(projectId) : undefined,
@@ -437,13 +474,13 @@ export default function SalesPage() {
                                 </div>
                             )}
                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="amount" className="text-right">Total Amount (₹)</Label>
+                                <Label htmlFor="amount" className="text-right">Total Amount ₹</Label>
                                 <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} className="col-span-3" required />
                             </div>
-                            {type === 'income' && subType === 'invoice' && (
+                            {type === 'income' && (
                                 <>
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="received" className="text-right">Received (₹)</Label>
+                                        <Label htmlFor="received" className="text-right">Received ₹</Label>
                                         <Input id="received" type="number" value={amountReceived} onChange={e => setAmountReceived(e.target.value)} className="col-span-3" placeholder="0.00" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
@@ -530,7 +567,14 @@ export default function SalesPage() {
                                                         {sale.description}
                                                         {sale.invoiceNumber && <div className="text-xs text-gray-500">#{sale.invoiceNumber}</div>}
                                                     </TableCell>
-                                                    <TableCell>{sale.clientName || sale.category || "-"}</TableCell>
+                                                    <TableCell>
+                                                        {sale.clientName || sale.category || "-"}
+                                                        {sale.type === 'income' && (
+                                                            <div className="text-xs text-gray-500">
+                                                                {sale.invoiceNumber ? 'Invoice' : 'Direct Sale'}
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
                                                     <TableCell className="capitalize">
                                                         <Badge variant={sale.type === 'income' ? 'outline' : 'secondary'}>
                                                             {sale.type}
