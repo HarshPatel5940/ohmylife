@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { users } from "@/db/schema";
 import { verifyPassword, signToken } from "@/lib/auth";
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
         }
 
-        const { env } = getRequestContext();
+        const { env } = getCloudflareContext();
         const db = getDb(env);
 
         // D1 select returns an array or use .get() if using drizzle-orm/d1 proxy

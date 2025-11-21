@@ -1,0 +1,42 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ohmylife",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2024-11-01",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "ohmylife-db",
+			"database_id": "e1767281-4dc8-4c7a-adcf-75cffeabaa35",
+			"migrations_dir": "drizzle"
+		},
+		{
+			"binding": "ohmylife_db",
+			"database_name": "ohmylife-db",
+			"database_id": "e1767281-4dc8-4c7a-adcf-75cffeabaa35",
+			"remote": true
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "BUCKET",
+			"bucket_name": "ohmylife-files"
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "CHAT_ROOM",
+				"class_name": "ChatRoom",
+				"script_name": "ohmylife-chat"
+			}
+		]
+	}
+}

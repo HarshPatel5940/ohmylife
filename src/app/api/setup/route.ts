@@ -1,14 +1,14 @@
 import { getDb } from "@/lib/db";
 import { users } from "@/db/schema";
 import { hashPassword } from "@/lib/auth";
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
 import { count } from "drizzle-orm";
 
 export const runtime = "edge";
 
 export async function GET(request: Request) {
-    const { env } = getRequestContext();
+    const { env } = getCloudflareContext();
     const db = getDb(env);
 
     // Check if any user exists

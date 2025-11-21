@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { users } from "@/db/schema";
 import { hashPassword } from "@/lib/auth";
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -9,7 +9,7 @@ export const runtime = "edge";
 
 export async function GET(request: Request) {
     try {
-        const { env } = getRequestContext();
+        const { env } = getCloudflareContext();
         const db = getDb(env);
 
         // Exclude password hash from response
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
         }
 
-        const { env } = getRequestContext();
+        const { env } = getCloudflareContext();
         const db = getDb(env);
 
         const passwordHash = await hashPassword(password);

@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "Manage your agency with ease",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,7 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

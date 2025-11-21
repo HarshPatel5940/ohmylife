@@ -20,22 +20,14 @@ export const projects = sqliteTable("projects", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
     description: text("description"),
+    clientId: integer("client_id").references(() => clients.id),
     status: text("status", { enum: ["active", "completed", "archived", "on_hold"] }).default("active").notNull(),
     startDate: integer("start_date", { mode: "timestamp" }),
     endDate: integer("end_date", { mode: "timestamp" }),
     ...timestamps,
 });
 
-export const projectTasks = sqliteTable("project_tasks", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    projectId: integer("project_id").references(() => projects.id),
-    title: text("title").notNull(),
-    status: text("status", { enum: ["todo", "in_progress", "done", "blocked"] }).default("todo").notNull(),
-    assigneeId: integer("assignee_id").references(() => users.id),
-    priority: text("priority", { enum: ["low", "medium", "high"] }).default("medium"),
-    dueDate: integer("due_date", { mode: "timestamp" }),
-    ...timestamps,
-});
+
 
 export const notes = sqliteTable("notes", {
     id: integer("id").primaryKey({ autoIncrement: true }),
@@ -73,15 +65,28 @@ export const leads = sqliteTable("leads", {
     ...timestamps,
 });
 
-export const invoices = sqliteTable("invoices", {
+// Unified financial transactions - income (sales/invoices) and expenses
+export const transactions = sqliteTable("transactions", {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    invoiceNumber: text("invoice_number").notNull(),
-    clientId: integer("client_id").references(() => clients.id),
-    amount: integer("amount").notNull(), // In cents
-    status: text("status", { enum: ["draft", "sent", "paid", "overdue", "cancelled"] }).default("draft").notNull(),
+    type: text("type", { enum: ["income", "expense"] }).notNull(),
+
+    // Common fields
+    description: text("description").notNull(),
+    amount: integer("amount").notNull(),
     date: integer("date", { mode: "timestamp" }).notNull(),
+    category: text("category"), // "sales", "salary", "office", "equipment", etc.
+
+    // Income specific (invoices/sales)
+    invoiceNumber: text("invoice_number"),
+    clientId: integer("client_id").references(() => clients.id),
+    amountReceived: integer("amount_received").default(0),
+    status: text("status", { enum: ["draft", "sent", "paid", "partial", "overdue", "cancelled"] }),
     dueDate: integer("due_date", { mode: "timestamp" }),
-    items: text("items", { mode: "json" }).notNull(), // JSON string of line items
+
+    // Expense specific
+    personId: integer("person_id").references(() => people.id), // For salary
+    paymentMethod: text("payment_method", { enum: ["cash", "bank", "card", "upi"] }),
+
     ...timestamps,
 });
 
@@ -93,6 +98,37 @@ export const people = sqliteTable("people", {
     phone: text("phone"),
     status: text("status", { enum: ["hiring", "active", "inactive", "terminated"] }).default("hiring").notNull(),
     hourlyRate: integer("hourly_rate"),
-    projectId: integer("project_id").references(() => projects.id), // Optional current project link
+    projectId: integer("project_id").references(() => projects.id),
+    ...timestamps,
+});
+
+export const projectTasks = sqliteTable("project_tasks", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    projectId: integer("project_id").references(() => projects.id),
+    title: text("title").notNull(),
+    status: text("status", { enum: ["todo", "in_progress", "done", "blocked"] }).default("todo").notNull(),
+    assigneeId: integer("assignee_id").references(() => people.id), // Linked to people
+    priority: text("priority", { enum: ["low", "medium", "high"] }).default("medium"),
+    dueDate: integer("due_date", { mode: "timestamp" }),
+    ...timestamps,
+});
+
+export const files = sqliteTable("files", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    projectId: integer("project_id").references(() => projects.id),
+    name: text("name").notNull(),
+    key: text("key").notNull(), // R2 key
+    size: integer("size").notNull(),
+    type: text("type").notNull(),
+    url: text("url"),
+    uploadedBy: integer("uploaded_by").references(() => users.id),
+    ...timestamps,
+});
+
+export const chatMessages = sqliteTable("chat_messages", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    projectId: integer("project_id").references(() => projects.id),
+    userId: integer("user_id").references(() => users.id),
+    content: text("content").notNull(),
     ...timestamps,
 });

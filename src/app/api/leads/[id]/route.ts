@@ -1,0 +1,55 @@
+import { getDb } from "@/lib/db";
+import { leads } from "@/db/schema";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
+
+export const runtime = "edge";
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const { clientId, status, value, source } = await request.json() as any;
+        const { env } = getCloudflareContext();
+        const db = getDb(env);
+        const leadId = parseInt(params.id);
+
+        const updatedLead = await db.update(leads)
+            .set({
+                clientId: clientId ? parseInt(clientId) : null,
+                status,
+                value: value ? parseInt(value) : null,
+                source,
+                updatedAt: new Date(),
+            })
+            .where(eq(leads.id, leadId))
+            .returning();
+
+        return NextResponse.json(updatedLead[0]);
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const { env } = getCloudflareContext();
+        const db = getDb(env);
+        const leadId = parseInt(params.id);
+
+        await db.update(leads)
+            .set({ deletedAt: new Date() })
+            .where(eq(leads.id, leadId));
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}

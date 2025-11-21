@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { people } from "@/db/schema";
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -8,7 +8,7 @@ export const runtime = "edge";
 
 export async function GET(request: Request) {
     try {
-        const { env } = getRequestContext();
+        const { env } = getCloudflareContext();
         const db = getDb(env);
 
         const allPeople = await db.select().from(people).where(isNull(people.deletedAt)).orderBy(desc(people.createdAt));
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Name is required" }, { status: 400 });
         }
 
-        const { env } = getRequestContext();
+        const { env } = getCloudflareContext();
         const db = getDb(env);
 
         const newPerson = await db.insert(people).values({
