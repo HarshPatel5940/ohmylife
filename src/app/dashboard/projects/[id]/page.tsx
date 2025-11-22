@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, MessageSquare } from "lucide-react";
+import { Send, MessageSquare, MoreVertical, Edit2, StickyNote } from "lucide-react";
+import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -111,10 +112,9 @@ export default function ProjectDetailsPage() {
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
-
         const url = new URL(window.location.href);
         url.searchParams.set("tab", value);
-        window.history.pushState({}, "", url);
+        window.history.replaceState({}, "", url);
     };
 
     const [tasks, setTasks] = useState<ProjectTask[]>([]);
@@ -144,6 +144,19 @@ export default function ProjectDetailsPage() {
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const [currentUser, setCurrentUser] = useState<{ id: number; username: string } | null>(null);
+    const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+    const [editContent, setEditContent] = useState("");
+
+    useEffect(() => {
+        fetch("/api/auth/me")
+            .then(res => {
+                if (res.ok) return res.json();
+                throw new Error("Not authenticated");
+            })
+            .then(data => setCurrentUser(data as { id: number; username: string }))
+            .catch(err => console.error("Failed to fetch user", err));
+    }, []);
 
 
 
@@ -166,6 +179,10 @@ export default function ProjectDetailsPage() {
                 const data = JSON.parse(event.data);
                 if (data.type === "message") {
                     setMessages(prev => [...prev, data.message]);
+                } else if (data.type === "message_updated") {
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === data.messageId ? { ...msg, content: data.content } : msg
+                    ));
                 } else if (data.type === "typing") {
                     setTypingUsers(prev => {
                         const next = new Set(prev);
@@ -353,24 +370,13 @@ export default function ProjectDetailsPage() {
     };
 
     const handleSendMessage = () => {
-        if (!newMessage.trim() || !socket) return;
-
-        // Send message with type 'message'
-        // Note: We need to send userId and senderName. 
-        // In a real app, these should be handled by the session/auth on the server or passed in.
-        // For now, we'll assume we have them or send placeholders if not available in context yet.
-        // Ideally, we should get the current user from a context or prop.
-        // Assuming 'people' list might contain the current user or we have a user object.
-        // Let's use a placeholder ID and Name if we don't have auth context here.
-        // TODO: Replace with actual user data
-        const currentUserId = 1; // Replace with actual user ID
-        const currentUserName = "Me"; // Replace with actual user name
+        if (!newMessage.trim() || !socket || !currentUser) return;
 
         socket.send(JSON.stringify({
             type: "message",
             projectId: parseInt(id as string),
-            userId: currentUserId,
-            senderName: currentUserName,
+            userId: currentUser.id,
+            senderName: currentUser.username,
             content: newMessage
         }));
         setNewMessage("");
@@ -382,22 +388,19 @@ export default function ProjectDetailsPage() {
         }
         socket.send(JSON.stringify({
             type: "typing",
-            userId: currentUserId,
-            senderName: currentUserName,
+            userId: currentUser.id,
+            senderName: currentUser.username,
             isTyping: false
         }));
     };
 
     const handleTyping = () => {
-        if (!socket) return;
-
-        const currentUserId = 1; // Replace with actual user ID
-        const currentUserName = "Me"; // Replace with actual user name
+        if (!socket || !currentUser) return;
 
         socket.send(JSON.stringify({
             type: "typing",
-            userId: currentUserId,
-            senderName: currentUserName,
+            userId: currentUser.id,
+            senderName: currentUser.username,
             isTyping: true
         }));
 
@@ -406,13 +409,50 @@ export default function ProjectDetailsPage() {
         }
 
         typingTimeoutRef.current = setTimeout(() => {
+            if (!socket || !currentUser) return;
             socket.send(JSON.stringify({
                 type: "typing",
-                userId: currentUserId,
-                senderName: currentUserName,
+                userId: currentUser.id,
+                senderName: currentUser.username,
                 isTyping: false
             }));
         }, 2000);
+    };
+
+    const handleEditMessage = (messageId: number, content: string) => {
+        setEditingMessageId(messageId);
+        setEditContent(content);
+    };
+
+    const submitEditMessage = () => {
+        if (!socket || !editContent.trim()) return;
+        socket.send(JSON.stringify({
+            type: "edit",
+            messageId: editingMessageId,
+            content: editContent
+        }));
+        setEditingMessageId(null);
+        setEditContent("");
+    };
+
+    const handleQuickNote = async (content: string) => {
+        try {
+            const res = await fetch(`/api/projects/${id}/notes`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: "Quick Note from Chat",
+                    content: content
+                })
+            });
+            if (res.ok) {
+                toast.success("Note added successfully");
+                fetchNotes();
+            }
+        } catch (error) {
+            console.error("Failed to add note", error);
+            toast.error("Failed to add note");
+        }
     };
 
     const getClientName = () => {
@@ -499,7 +539,7 @@ export default function ProjectDetailsPage() {
                                         <p className="text-center text-gray-500 py-8">No messages yet</p>
                                     ) : (
                                         messages.map((msg) => (
-                                            <div key={msg.id} className="flex items-start gap-3">
+                                            <div key={msg.id} className="flex items-start gap-3 group">
                                                 <Avatar className="h-8 w-8">
                                                     <AvatarFallback>
                                                         {msg.senderName?.charAt(0) || "U"}
@@ -514,7 +554,39 @@ export default function ProjectDetailsPage() {
                                                             {new Date(msg.createdAt).toLocaleTimeString()}
                                                         </span>
                                                     </div>
-                                                    <p className="text-sm mt-1">{msg.content}</p>
+                                                    {editingMessageId === msg.id ? (
+                                                        <div className="mt-1 flex gap-2">
+                                                            <Input
+                                                                value={editContent}
+                                                                onChange={(e) => setEditContent(e.target.value)}
+                                                                className="h-8 text-sm"
+                                                            />
+                                                            <Button size="sm" onClick={submitEditMessage}>Save</Button>
+                                                            <Button size="sm" variant="ghost" onClick={() => setEditingMessageId(null)}>Cancel</Button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="group relative">
+                                                            <p className="text-sm mt-1">{msg.content}</p>
+                                                            <div className="absolute top-0 right-0 hidden group-hover:flex gap-1 bg-white shadow-sm rounded-md border p-1">
+                                                                {currentUser?.id === msg.userId && (
+                                                                    <button
+                                                                        onClick={() => handleEditMessage(msg.id, msg.content)}
+                                                                        className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600"
+                                                                        title="Edit"
+                                                                    >
+                                                                        <Edit2 className="h-3 w-3" />
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleQuickNote(msg.content)}
+                                                                    className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-green-600"
+                                                                    title="Save as Note"
+                                                                >
+                                                                    <StickyNote className="h-3 w-3" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))
@@ -526,19 +598,21 @@ export default function ProjectDetailsPage() {
                                     )}
                                     <div ref={chatEndRef} />
                                 </div>
-                                <div className="flex gap-2">
-                                    <Input
-                                        placeholder="Type a message..."
-                                        value={newMessage}
-                                        onChange={(e) => {
-                                            setNewMessage(e.target.value);
-                                            handleTyping();
-                                        }}
-                                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                                    />
-                                    <Button onClick={handleSendMessage}>
-                                        <Send className="h-4 w-4" />
-                                    </Button>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Type a message..."
+                                            value={newMessage}
+                                            onChange={(e) => {
+                                                setNewMessage(e.target.value);
+                                                handleTyping();
+                                            }}
+                                            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                                        />
+                                        <Button onClick={handleSendMessage}>
+                                            <Send className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>

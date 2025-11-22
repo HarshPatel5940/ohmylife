@@ -105,6 +105,23 @@ export class ChatRoom extends DurableObject {
                     // For now, we'll just increment for users who are NOT the sender if we knew who they were.
                     // Since we don't track user IDs in sessions yet, we'll skip complex unread logic for now
                     // or implement a basic version if needed.
+                } else if (data.type === "edit") {
+                    // Update in SQLite
+                    this.sql.exec(`
+                        UPDATE messages SET content = ? WHERE id = ?
+                    `, data.content, data.messageId);
+
+                    const broadcastData = JSON.stringify({
+                        type: "message_updated",
+                        messageId: data.messageId,
+                        content: data.content
+                    });
+
+                    this.sessions.forEach((session) => {
+                        if (session.readyState === WebSocket.OPEN) {
+                            session.send(broadcastData);
+                        }
+                    });
                 } else if (data.type === "typing") {
                     const broadcastData = JSON.stringify({
                         type: "typing",
