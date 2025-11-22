@@ -218,8 +218,8 @@ function LeadsContent() {
     return (
         <div className="space-y-6">
             <Tabs value={view} onValueChange={(v) => setView(v as "list" | "board")} className="w-full">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Leads</h1>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Leads</h1>
                     <div className="flex gap-2 items-center">
                         <TabsList>
                             <TabsTrigger value="board">Board</TabsTrigger>

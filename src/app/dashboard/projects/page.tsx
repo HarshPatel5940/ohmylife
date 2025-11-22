@@ -330,28 +330,28 @@ function ProjectsContent() {
         <div className="space-y-6">
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects Management</h1>
-                    <div className="flex flex-row space-x-6 items-center">
-                        <TabsList className="bg-gray-100 dark:bg-gray-800">
-                            <TabsTrigger value="projects">Projects</TabsTrigger>
-                            <TabsTrigger value="clients">Clients</TabsTrigger>
-                            <TabsTrigger value="people">People</TabsTrigger>
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Projects Management</h1>
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center">
+                        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full sm:w-auto">
+                            <TabsTrigger value="projects" className="flex-1 sm:flex-none">Projects</TabsTrigger>
+                            <TabsTrigger value="clients" className="flex-1 sm:flex-none">Clients</TabsTrigger>
+                            <TabsTrigger value="people" className="flex-1 sm:flex-none">People</TabsTrigger>
                         </TabsList>
 
                         <div className="flex gap-2">
                             {activeTab === "clients" && (
-                                <Button onClick={() => openClientDialog()}>
+                                <Button onClick={() => openClientDialog()} className="w-full sm:w-auto">
                                     <Plus className="mr-2 h-4 w-4" /> Add Client
                                 </Button>
                             )}
                             {activeTab === "projects" && (
-                                <Button onClick={() => router.push('/dashboard/projects/new')}>
+                                <Button onClick={() => router.push('/dashboard/projects/new')} className="w-full sm:w-auto">
                                     <Plus className="mr-2 h-4 w-4" /> Add Project
                                 </Button>
                             )}
                             {activeTab === "people" && (
-                                <Button onClick={() => openPersonDialog()}>
+                                <Button onClick={() => openPersonDialog()} className="w-full sm:w-auto">
                                     <Plus className="mr-2 h-4 w-4" /> Add Person
                                 </Button>
                             )}
@@ -397,18 +397,18 @@ function ProjectsContent() {
                         </Card>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                 placeholder="Search projects..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="pl-10"
+                                className="pl-10 w-full bg-white"
                             />
                         </div>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-full sm:w-[180px]">
                                 <SelectValue placeholder="Filter by status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -515,7 +515,7 @@ function ProjectsContent() {
                             placeholder="Search clients..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10"
+                            className="pl-10 bg-white"
                         />
                     </div>
 
@@ -599,7 +599,7 @@ function ProjectsContent() {
                             placeholder="Search people..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10"
+                            className="pl-10 bg-white"
                         />
                     </div>
 

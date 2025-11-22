@@ -81,10 +81,10 @@ export function ProjectOverview({ project, clientName }: ProjectOverviewProps) {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
+                <Card className="hover:shadow-md transition-all h-full border-l-4 border-l-blue-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Team Members</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <Users className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{loading ? "..." : teamCount}</div>
@@ -94,10 +94,10 @@ export function ProjectOverview({ project, clientName }: ProjectOverviewProps) {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="hover:shadow-md transition-all h-full border-l-4 border-l-purple-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Tasks</CardTitle>
-                        <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                        <CheckSquare className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{loading ? "..." : taskStats.total}</div>
@@ -107,10 +107,10 @@ export function ProjectOverview({ project, clientName }: ProjectOverviewProps) {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="hover:shadow-md transition-all h-full border-l-4 border-l-green-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <DollarSign className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{loading ? "..." : transactionStats.count}</div>

@@ -86,13 +86,13 @@ export default function DashboardPage() {
     return (
         <div className="space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-                    <p className="text-muted-foreground mt-1">Welcome back! Here&apos;s what&apos;s happening today.</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                    <p className="text-muted-foreground mt-1 text-sm sm:text-base">Welcome back! Here&apos;s what&apos;s happening today.</p>
                 </div>
                 <Link href="/dashboard/projects?new=true">
-                    <Button size="lg">
+                    <Button size="lg" className="w-full sm:w-auto">
                         <Plus className="mr-2 h-4 w-4" /> New Project
                     </Button>
                 </Link>

@@ -305,9 +305,9 @@ function SalesContent() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Sales & Finance</h1>
-                <Button onClick={() => { resetForm(); setOpen(true); }}>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Sales & Finance</h1>
+                <Button onClick={() => { resetForm(); setOpen(true); }} className="w-full sm:w-auto">
                     <Plus className="mr-2 h-4 w-4" /> Record Transaction
                 </Button>
             </div>

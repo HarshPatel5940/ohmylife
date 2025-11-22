@@ -98,7 +98,7 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
                     placeholder="Add a note..."
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
-                    className="flex-1"
+                    className="flex-1 bg-white"
                 />
                 <Button onClick={handleAddNote}>
                     <Plus className="h-4 w-4 mr-2" /> Add
@@ -111,7 +111,7 @@ export function ProjectNotes({ notes, projectId, onNotesChange }: ProjectNotesPr
                         placeholder="Search notes..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-sm"
+                        className="max-w-sm bg-white"
                     />
                 </div>
                 <Select value={sortOrder} onValueChange={(val: "newest" | "oldest") => setSortOrder(val)}>

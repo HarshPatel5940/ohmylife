@@ -13,6 +13,12 @@ export async function GET(
         const { env } = await getCloudflareContext({ async: true });
         const projectId = params.id;
 
+        // Check if CHAT_ROOM binding exists (production only)
+        if (!env.CHAT_ROOM) {
+            console.warn("CHAT_ROOM Durable Object not available (local dev)");
+            return NextResponse.json([]);
+        }
+
         const id = env.CHAT_ROOM.idFromName(projectId);
         const stub = env.CHAT_ROOM.get(id);
 
@@ -25,6 +31,7 @@ export async function GET(
         return NextResponse.json(messages);
     } catch (error) {
         console.error("Error fetching messages from DO", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        // Return empty array instead of error for better UX
+        return NextResponse.json([]);
     }
 }

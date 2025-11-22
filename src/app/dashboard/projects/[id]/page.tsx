@@ -511,147 +511,177 @@ function ProjectDetailsContent() {
             />
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList>
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                    <TabsTrigger value="team">Team</TabsTrigger>
-                    <TabsTrigger value="files">Files</TabsTrigger>
-                    <TabsTrigger value="notes">Notes</TabsTrigger>
-                    <TabsTrigger value="chat">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Chat
-                    </TabsTrigger>
-                </TabsList>
+            <div className="w-full lg:max-w-[80%] lg:mx-auto">
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                    <TabsList className="w-full grid grid-cols-3 md:grid-cols-6 gap-2 h-auto p-2 bg-muted/50">
+                        <TabsTrigger
+                            value="overview"
+                            className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
+                        >
+                            Overview
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="tasks"
+                            className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
+                        >
+                            Tasks
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="team"
+                            className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
+                        >
+                            Team
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="files"
+                            className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
+                        >
+                            Files
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="notes"
+                            className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
+                        >
+                            Notes
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="chat"
+                            className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5 col-span-3 md:col-span-1"
+                        >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Chat
+                        </TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="overview" className="space-y-4">
-                    <ProjectOverview project={project} clientName={getClientName()} />
-                </TabsContent>
+                    <TabsContent value="overview" className="space-y-4 mt-6">
+                        <ProjectOverview project={project} clientName={getClientName()} />
+                    </TabsContent>
 
-                <TabsContent value="tasks">
-                    <ProjectTasks
-                        tasks={tasks}
-                        people={people}
-                        projectId={project.id}
-                        onTasksChange={fetchTasks}
-                    />
-                </TabsContent>
+                    <TabsContent value="tasks" className="mt-6">
+                        <ProjectTasks
+                            tasks={tasks}
+                            people={people}
+                            projectId={project.id}
+                            onTasksChange={fetchTasks}
+                        />
+                    </TabsContent>
 
-                <TabsContent value="team">
-                    <ProjectTeam
-                        teamMembers={teamMembers}
-                        people={people}
-                        projectId={project.id}
-                        onTeamChange={fetchTeamMembers}
-                        currentUserRole={currentUser?.role}
-                    />
-                </TabsContent>
+                    <TabsContent value="team" className="mt-6">
+                        <ProjectTeam
+                            teamMembers={teamMembers}
+                            people={people}
+                            projectId={project.id}
+                            onTeamChange={fetchTeamMembers}
+                            currentUserRole={currentUser?.role}
+                        />
+                    </TabsContent>
 
-                <TabsContent value="files">
-                    <ProjectFiles
-                        files={files}
-                        projectId={project.id}
-                        onFilesChange={fetchFiles}
-                    />
-                </TabsContent>
+                    <TabsContent value="files" className="mt-6">
+                        <ProjectFiles
+                            files={files}
+                            projectId={project.id}
+                            onFilesChange={fetchFiles}
+                        />
+                    </TabsContent>
 
-                <TabsContent value="notes">
-                    <ProjectNotes
-                        notes={notes}
-                        projectId={project.id}
-                        onNotesChange={fetchNotes}
-                    />
-                </TabsContent>
+                    <TabsContent value="notes" className="mt-6">
+                        <ProjectNotes
+                            notes={notes}
+                            projectId={project.id}
+                            onNotesChange={fetchNotes}
+                        />
+                    </TabsContent>
 
-                <TabsContent value="chat">
-                    <Card>
-                        <CardContent className="p-4">
-                            <div className="flex flex-col h-[500px]">
-                                <div className="flex-1 overflow-y-auto space-y-3 mb-4">
-                                    {messages.length === 0 ? (
-                                        <p className="text-center text-gray-500 py-8">No messages yet</p>
-                                    ) : (
-                                        messages.map((msg) => (
-                                            <div key={msg.id} className="flex items-start gap-3 group">
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarFallback>
-                                                        {msg.senderName?.charAt(0) || "U"}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-medium text-sm">
-                                                            {msg.senderName || "Unknown"}
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">
-                                                            {new Date(msg.createdAt).toLocaleTimeString()}
-                                                        </span>
-                                                    </div>
-                                                    {editingMessageId === msg.id ? (
-                                                        <div className="mt-1 flex gap-2">
-                                                            <Input
-                                                                value={editContent}
-                                                                onChange={(e) => setEditContent(e.target.value)}
-                                                                className="h-8 text-sm"
-                                                            />
-                                                            <Button size="sm" onClick={submitEditMessage}>Save</Button>
-                                                            <Button size="sm" variant="ghost" onClick={() => setEditingMessageId(null)}>Cancel</Button>
+                    <TabsContent value="chat" className="mt-6">
+                        <Card>
+                            <CardContent className="p-4">
+                                <div className="flex flex-col h-[500px]">
+                                    <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+                                        {messages.length === 0 ? (
+                                            <p className="text-center text-gray-500 py-8">No messages yet</p>
+                                        ) : (
+                                            messages.map((msg) => (
+                                                <div key={msg.id} className="flex items-start gap-3 group">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarFallback>
+                                                            {msg.senderName?.charAt(0) || "U"}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-sm">
+                                                                {msg.senderName || "Unknown"}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500">
+                                                                {new Date(msg.createdAt).toLocaleTimeString()}
+                                                            </span>
                                                         </div>
-                                                    ) : (
-                                                        <div className="group relative">
-                                                            <p className="text-sm mt-1">{msg.content}</p>
-                                                            <div className="absolute top-0 right-0 hidden group-hover:flex gap-1 bg-white shadow-sm rounded-md border p-1">
-                                                                {currentUser?.id === msg.userId && (
-                                                                    <button
-                                                                        onClick={() => handleEditMessage(msg.id, msg.content)}
-                                                                        className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600"
-                                                                        title="Edit"
-                                                                    >
-                                                                        <Edit2 className="h-3 w-3" />
-                                                                    </button>
-                                                                )}
-                                                                <button
-                                                                    onClick={() => handleQuickNote(msg.id, msg.content)}
-                                                                    className={`p-1 hover:bg-gray-100 rounded transition-colors ${noteClickState[msg.id] ? "text-green-600 bg-green-50" : "text-gray-500 hover:text-green-600"}`}
-                                                                    title={noteClickState[msg.id] ? "Click again to confirm" : "Save as Note"}
-                                                                >
-                                                                    <StickyNote className="h-3 w-3" />
-                                                                </button>
+                                                        {editingMessageId === msg.id ? (
+                                                            <div className="mt-1 flex gap-2">
+                                                                <Input
+                                                                    value={editContent}
+                                                                    onChange={(e) => setEditContent(e.target.value)}
+                                                                    className="h-8 text-sm"
+                                                                />
+                                                                <Button size="sm" onClick={submitEditMessage}>Save</Button>
+                                                                <Button size="sm" variant="ghost" onClick={() => setEditingMessageId(null)}>Cancel</Button>
                                                             </div>
-                                                        </div>
-                                                    )}
+                                                        ) : (
+                                                            <div className="group relative">
+                                                                <p className="text-sm mt-1">{msg.content}</p>
+                                                                <div className="absolute top-0 right-0 hidden group-hover:flex gap-1 bg-white shadow-sm rounded-md border p-1">
+                                                                    {currentUser?.id === msg.userId && (
+                                                                        <button
+                                                                            onClick={() => handleEditMessage(msg.id, msg.content)}
+                                                                            className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600"
+                                                                            title="Edit"
+                                                                        >
+                                                                            <Edit2 className="h-3 w-3" />
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => handleQuickNote(msg.id, msg.content)}
+                                                                        className={`p-1 hover:bg-gray-100 rounded transition-colors ${noteClickState[msg.id] ? "text-green-600 bg-green-50" : "text-gray-500 hover:text-green-600"}`}
+                                                                        title={noteClickState[msg.id] ? "Click again to confirm" : "Save as Note"}
+                                                                    >
+                                                                        <StickyNote className="h-3 w-3" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
+                                            ))
+                                        )}
+                                        {typingUsers.size > 0 && (
+                                            <div className="text-xs text-gray-500 italic">
+                                                {Array.from(typingUsers).join(", ")} {typingUsers.size === 1 ? "is" : "are"} typing...
                                             </div>
-                                        ))
-                                    )}
-                                    {typingUsers.size > 0 && (
-                                        <div className="text-xs text-gray-500 italic">
-                                            {Array.from(typingUsers).join(", ")} {typingUsers.size === 1 ? "is" : "are"} typing...
+                                        )}
+                                        <div ref={chatEndRef} />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Type a message..."
+                                                value={newMessage}
+                                                onChange={(e) => {
+                                                    setNewMessage(e.target.value);
+                                                    handleTyping();
+                                                }}
+                                                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                                            />
+                                            <Button onClick={handleSendMessage}>
+                                                <Send className="h-4 w-4" />
+                                            </Button>
                                         </div>
-                                    )}
-                                    <div ref={chatEndRef} />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex gap-2">
-                                        <Input
-                                            placeholder="Type a message..."
-                                            value={newMessage}
-                                            onChange={(e) => {
-                                                setNewMessage(e.target.value);
-                                                handleTyping();
-                                            }}
-                                            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                                        />
-                                        <Button onClick={handleSendMessage}>
-                                            <Send className="h-4 w-4" />
-                                        </Button>
                                     </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
 
             {/* Edit Project Dialog */}
             <Dialog open={editProjectOpen} onOpenChange={setEditProjectOpen}>

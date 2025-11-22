@@ -196,7 +196,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                     </div>
                 </div>
 
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-4 items-center bg-white">
                     <div className="flex-1">
                         <Input
                             placeholder="Search tasks..."
@@ -221,7 +221,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
 
             {/* Task Views */}
             {taskView === "list" ? (
-                <div className="border rounded-lg">
+                <div className="border rounded-lg bg-white">
                     <Table>
                         <TableHeader>
                             <TableRow>

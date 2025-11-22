@@ -207,9 +207,9 @@ export default function TasksPage() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tasks</h1>
-                    <div className="flex gap-2 items-center">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Tasks</h1>
+                    <div className="flex gap-2 items-center flex-wrap">
                         <Tabs value={view} onValueChange={(v) => setView(v as "list" | "board")}>
                             <TabsList>
                                 <TabsTrigger value="board">Board</TabsTrigger>
@@ -221,7 +221,7 @@ export default function TasksPage() {
                             if (!val) resetForm();
                         }}>
                             <DialogTrigger asChild>
-                                <Button onClick={resetForm}>
+                                <Button onClick={resetForm} className="w-full sm:w-auto">
                                     <Plus className="mr-2 h-4 w-4" /> Add Task
                                 </Button>
                             </DialogTrigger>
@@ -311,17 +311,17 @@ export default function TasksPage() {
                     </div>
                 </div>
 
-                <div className="flex gap-4 items-center">
-                    <div className="flex-1">
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div className="w-full sm:flex-1">
                         <Input
                             placeholder="Search tasks..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="max-w-sm"
+                            className="w-full sm:max-w-sm"
                         />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Filter by status" />
                         </SelectTrigger>
                         <SelectContent>

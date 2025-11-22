@@ -45,39 +45,59 @@ export default function DashboardLayout({
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Top Navigation Bar */}
             <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center space-x-6 flex-1">
-                        <h1 className="text-xl font-bold text-gray-900 dark:text-white hidden md:block shrink-0">OhMyLife</h1>
+                <div className="container mx-auto px-2 sm:px-4 h-16 flex items-center justify-between">
+                    <div className="flex items-center space-x-3 sm:space-x-6 flex-1 min-w-0">
+                        <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white shrink-0">OhMyLife</h1>
 
                         {/* Tab Navigation */}
-                        <Tabs value={currentTab} className="w-full overflow-x-auto">
-                            <TabsList className="w-full justify-start bg-transparent p-0 h-auto space-x-1">
+                        <Tabs value={currentTab} className="w-full overflow-x-auto ml-10">
+                            <TabsList className="w-full justify-start bg-transparent p-0 h-auto space-x-0.5 sm:space-x-1">
                                 <Link href="/dashboard">
-                                    <TabsTrigger value="dashboard" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                        <LayoutDashboard size={18} /> Dashboard
+                                    <TabsTrigger
+                                        value="dashboard"
+                                        className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-2 sm:px-3 py-2 gap-1 sm:gap-2"
+                                    >
+                                        <LayoutDashboard size={18} />
+                                        <span className="hidden md:inline">Dashboard</span>
                                     </TabsTrigger>
                                 </Link>
                                 <Link href="/dashboard/projects">
-                                    <TabsTrigger value="projects" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                        <Briefcase size={18} /> Projects
+                                    <TabsTrigger
+                                        value="projects"
+                                        className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-2 sm:px-3 py-2 gap-1 sm:gap-2"
+                                    >
+                                        <Briefcase size={18} />
+                                        <span className="hidden md:inline">Projects</span>
                                     </TabsTrigger>
                                 </Link>
                                 <Link href="/dashboard/tasks">
-                                    <TabsTrigger value="tasks" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                        <CheckSquare size={18} /> Tasks
+                                    <TabsTrigger
+                                        value="tasks"
+                                        className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-2 sm:px-3 py-2 gap-1 sm:gap-2"
+                                    >
+                                        <CheckSquare size={18} />
+                                        <span className="hidden md:inline">Tasks</span>
                                     </TabsTrigger>
                                 </Link>
                                 {(currentUser?.role === "admin" || currentUser?.canAccessLeads) && (
                                     <Link href="/dashboard/leads">
-                                        <TabsTrigger value="leads" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                            <UserPlus size={18} /> Leads
+                                        <TabsTrigger
+                                            value="leads"
+                                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-2 sm:px-3 py-2 gap-1 sm:gap-2"
+                                        >
+                                            <UserPlus size={18} />
+                                            <span className="hidden md:inline">Leads</span>
                                         </TabsTrigger>
                                     </Link>
                                 )}
                                 {(currentUser?.role === "admin" || currentUser?.canAccessFinance) && (
                                     <Link href="/dashboard/sales">
-                                        <TabsTrigger value="sales" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                            <CreditCard size={18} /> Finance
+                                        <TabsTrigger
+                                            value="sales"
+                                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-2 sm:px-3 py-2 gap-1 sm:gap-2"
+                                        >
+                                            <CreditCard size={18} />
+                                            <span className="hidden md:inline">Finance</span>
                                         </TabsTrigger>
                                     </Link>
                                 )}
@@ -119,7 +139,7 @@ export default function DashboardLayout({
             </header>
 
             {/* Main Content */}
-            <main className="container mx-auto p-6">
+            <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
                 {children}
             </main>
         </div>

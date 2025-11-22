@@ -91,7 +91,7 @@ export function ProjectFiles({ files, projectId, onFilesChange }: ProjectFilesPr
                     files.map((file) => (
                         <div
                             key={file.id}
-                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 bg-white"
                         >
                             <div className="flex items-center gap-3 flex-1">
                                 <FileIcon className="h-5 w-5 text-gray-400" />
