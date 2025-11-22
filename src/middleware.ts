@@ -18,6 +18,22 @@ export async function middleware(request: NextRequest) {
         if (!payload) {
             return NextResponse.redirect(new URL("/login", request.url));
         }
+
+        if (path.startsWith("/dashboard/leads") && !payload.canAccessLeads && payload.role !== "admin") {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+
+        if (path.startsWith("/dashboard/sales") && !payload.canAccessFinance && payload.role !== "admin") {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+
+        const projectMatch = path.match(/^\/dashboard\/projects\/(\d+)/);
+        if (projectMatch && payload.role !== "admin") {
+            const requestedProjectId = parseInt(projectMatch[1]);
+            if (payload.projectId !== requestedProjectId) {
+                return NextResponse.redirect(new URL("/dashboard", request.url));
+            }
+        }
     }
 
     return NextResponse.next();

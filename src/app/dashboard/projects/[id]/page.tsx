@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -110,11 +110,11 @@ export default function ProjectDetailsPage() {
         }
     }, [searchParams]);
 
+    const pathname = usePathname();
+
     const handleTabChange = (value: string) => {
         setActiveTab(value);
-        const url = new URL(window.location.href);
-        url.searchParams.set("tab", value);
-        window.history.replaceState({}, "", url);
+        router.replace(`${pathname}?tab=${value}`, { scroll: false });
     };
 
     const [tasks, setTasks] = useState<ProjectTask[]>([]);
@@ -147,6 +147,7 @@ export default function ProjectDetailsPage() {
     const [currentUser, setCurrentUser] = useState<{ id: number; username: string } | null>(null);
     const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
     const [editContent, setEditContent] = useState("");
+    const [noteClickState, setNoteClickState] = useState<{ [key: number]: number }>({}); // msgId -> click count
 
     useEffect(() => {
         fetch("/api/auth/me")
@@ -435,7 +436,26 @@ export default function ProjectDetailsPage() {
         setEditContent("");
     };
 
-    const handleQuickNote = async (content: string) => {
+    const handleQuickNote = async (msgId: number, content: string) => {
+        const currentClicks = noteClickState[msgId] || 0;
+
+        if (currentClicks === 0) {
+            // First click
+            setNoteClickState(prev => ({ ...prev, [msgId]: 1 }));
+            toast.info("Click again to save as note");
+
+            // Reset after 3 seconds
+            setTimeout(() => {
+                setNoteClickState(prev => {
+                    const newState = { ...prev };
+                    delete newState[msgId];
+                    return newState;
+                });
+            }, 3000);
+            return;
+        }
+
+        // Second click - perform action
         try {
             const res = await fetch(`/api/projects/${id}/notes`, {
                 method: "POST",
@@ -448,6 +468,12 @@ export default function ProjectDetailsPage() {
             if (res.ok) {
                 toast.success("Note added successfully");
                 fetchNotes();
+                // Reset state
+                setNoteClickState(prev => {
+                    const newState = { ...prev };
+                    delete newState[msgId];
+                    return newState;
+                });
             }
         } catch (error) {
             console.error("Failed to add note", error);
@@ -578,9 +604,9 @@ export default function ProjectDetailsPage() {
                                                                     </button>
                                                                 )}
                                                                 <button
-                                                                    onClick={() => handleQuickNote(msg.content)}
-                                                                    className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-green-600"
-                                                                    title="Save as Note"
+                                                                    onClick={() => handleQuickNote(msg.id, msg.content)}
+                                                                    className={`p-1 hover:bg-gray-100 rounded transition-colors ${noteClickState[msg.id] ? "text-green-600 bg-green-50" : "text-gray-500 hover:text-green-600"}`}
+                                                                    title={noteClickState[msg.id] ? "Click again to confirm" : "Save as Note"}
                                                                 >
                                                                     <StickyNote className="h-3 w-3" />
                                                                 </button>

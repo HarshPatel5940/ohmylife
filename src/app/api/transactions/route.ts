@@ -3,11 +3,22 @@ import { transactions, projects } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull, eq, and, gte, lte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/server-auth";
 
 
 export async function GET(request: Request) {
     try {
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        if (user.role !== "admin" && !user.canAccessFinance) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
 
         const { searchParams } = new URL(request.url);
@@ -124,6 +135,16 @@ export async function POST(request: Request) {
         }
 
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        if (user.role !== "admin" && !user.canAccessFinance) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
 
 

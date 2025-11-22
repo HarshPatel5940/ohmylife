@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 
@@ -13,6 +13,9 @@ export const users = sqliteTable("users", {
     username: text("username").notNull().unique(),
     passwordHash: text("password_hash").notNull(),
     role: text("role", { enum: ["admin", "user"] }).default("user").notNull(),
+    personId: integer("person_id").references(() => people.id),
+    canAccessLeads: integer("can_access_leads", { mode: "boolean" }).default(false),
+    canAccessFinance: integer("can_access_finance", { mode: "boolean" }).default(false),
     ...timestamps,
 });
 
@@ -128,3 +131,14 @@ export const chatMessages = sqliteTable("chat_messages", {
     content: text("content").notNull(),
     ...timestamps,
 });
+
+export const usersRelations = relations(users, ({ one }) => ({
+    person: one(people, {
+        fields: [users.personId],
+        references: [people.id],
+    }),
+}));
+
+export const peopleRelations = relations(people, ({ many }) => ({
+    users: many(users),
+}));

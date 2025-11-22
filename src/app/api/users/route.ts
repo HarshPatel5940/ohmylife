@@ -4,11 +4,18 @@ import { hashPassword } from "@/lib/auth";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/server-auth";
 
 
 export async function GET(request: Request) {
     try {
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user || user.role !== "admin") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
 
 
@@ -27,13 +34,19 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { username, password, role } = await request.json() as any;
+        const { username, password, role, personId, canAccessLeads, canAccessFinance } = await request.json() as any;
 
         if (!username || !password) {
             return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
         }
 
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user || user.role !== "admin") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
 
         const passwordHash = await hashPassword(password);
@@ -42,6 +55,9 @@ export async function POST(request: Request) {
             username,
             passwordHash,
             role: role || "user",
+            personId: personId || null,
+            canAccessLeads: canAccessLeads || false,
+            canAccessFinance: canAccessFinance || false,
         }).returning({
             id: users.id,
             username: users.username,

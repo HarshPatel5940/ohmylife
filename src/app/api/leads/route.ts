@@ -3,11 +3,21 @@ import { leads } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
-
+import { getAuthenticatedUser } from "@/lib/server-auth";
 
 export async function GET(request: Request) {
     try {
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        if (user.role !== "admin" && !user.canAccessLeads) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
 
         const allLeads = await db.select().from(leads).where(isNull(leads.deletedAt)).orderBy(desc(leads.createdAt));
@@ -27,6 +37,16 @@ export async function POST(request: Request) {
         }
 
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        if (user.role !== "admin" && !user.canAccessLeads) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
 
         const newLead = await db.insert(leads).values({

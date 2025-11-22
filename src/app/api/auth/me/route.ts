@@ -22,7 +22,9 @@ export async function GET() {
         return NextResponse.json({
             id: payload.id,
             username: payload.username,
-            role: payload.role
+            role: payload.role,
+            canAccessLeads: payload.canAccessLeads,
+            canAccessFinance: payload.canAccessFinance
         });
     } catch (error) {
         console.error("Auth check error:", error);

@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { users } from "@/db/schema";
+import { users, people } from "@/db/schema";
 import { verifyPassword, signToken } from "@/lib/auth";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
@@ -19,7 +19,9 @@ export async function POST(request: Request) {
 
 
 
-        const user = await db.select().from(users).where(eq(users.username, username)).get();
+        const user = await db.query.users.findFirst({
+            where: eq(users.username, username),
+        });
 
         if (!user) {
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
@@ -31,7 +33,22 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 
-        const token = await signToken({ id: user.id, username: user.username, role: user.role });
+        let projectId: number | undefined;
+        if (user.personId) {
+            const person = await db.query.people.findFirst({
+                where: eq(people.id, user.personId)
+            });
+            projectId = person?.projectId || undefined;
+        }
+
+        const token = await signToken({
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            projectId: projectId,
+            canAccessLeads: user.canAccessLeads,
+            canAccessFinance: user.canAccessFinance
+        });
 
         const response = NextResponse.json({ success: true });
         response.cookies.set("token", token, {

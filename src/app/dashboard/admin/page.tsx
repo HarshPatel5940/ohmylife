@@ -13,17 +13,39 @@ interface User {
     id: number;
     username: string;
     role: string;
+    personId?: number;
+    canAccessLeads: boolean;
+    canAccessFinance: boolean;
     createdAt: string;
+}
+
+interface Person {
+    id: number;
+    name: string;
 }
 
 export default function AdminPage() {
     const [users, setUsers] = useState<User[]>([]);
+    const [people, setPeople] = useState<Person[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchUsers();
+        fetchPeople();
     }, []);
+
+    const fetchPeople = async () => {
+        try {
+            const res = await fetch("/api/people");
+            if (res.ok) {
+                const data = await res.json() as Person[];
+                setPeople(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch people", error);
+        }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -40,7 +62,14 @@ export default function AdminPage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data = Object.fromEntries(formData.entries());
+        const data = {
+            username: formData.get("username"),
+            password: formData.get("password"),
+            role: formData.get("role"),
+            personId: formData.get("personId") ? Number(formData.get("personId")) : null,
+            canAccessLeads: formData.get("canAccessLeads") === "on",
+            canAccessFinance: formData.get("canAccessFinance") === "on",
+        };
 
         try {
             const res = await fetch("/api/users", {
@@ -88,6 +117,23 @@ export default function AdminPage() {
                                         <option value="user">User</option>
                                         <option value="admin">Admin</option>
                                     </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="personId">Link to Person (Project Access)</Label>
+                                    <select id="personId" name="personId" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                        <option value="">Select a person...</option>
+                                        {people.map(person => (
+                                            <option key={person.id} value={person.id}>{person.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex items-center space-x-2 pt-8">
+                                    <input type="checkbox" id="canAccessLeads" name="canAccessLeads" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    <Label htmlFor="canAccessLeads">Access Leads</Label>
+                                </div>
+                                <div className="flex items-center space-x-2 pt-8">
+                                    <input type="checkbox" id="canAccessFinance" name="canAccessFinance" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    <Label htmlFor="canAccessFinance">Access Finance</Label>
                                 </div>
                             </div>
                             <div className="flex justify-end gap-2">

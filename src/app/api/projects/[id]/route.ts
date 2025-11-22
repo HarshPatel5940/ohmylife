@@ -3,13 +3,25 @@ import { projects } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/server-auth";
 
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
         const { env } = await getCloudflareContext({ async: true });
-        const db = getDb(env);
+        const user = await getAuthenticatedUser(env);
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const id = parseInt(params.id);
+
+        if (user.role !== "admin" && user.projectId !== id) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const db = getDb(env);
 
         const project = await db.select().from(projects).where(eq(projects.id, id)).get();
 
@@ -27,6 +39,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
     try {
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user || user.role !== "admin") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
         const id = parseInt(params.id);
 
@@ -46,6 +64,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     try {
         const { name, description, clientId, status, startDate, endDate } = await request.json() as any;
         const { env } = await getCloudflareContext({ async: true });
+        const user = await getAuthenticatedUser(env);
+
+        if (!user || user.role !== "admin") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const db = getDb(env);
         const id = parseInt(params.id);
 

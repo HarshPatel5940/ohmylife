@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Briefcase, CheckSquare, Users, CreditCard, UserCircle, Settings, LayoutDashboard, UserPlus, MoreVertical } from "lucide-react";
@@ -20,6 +21,17 @@ export default function DashboardLayout({
 }) {
     const pathname = usePathname();
     const router = useRouter();
+    const [currentUser, setCurrentUser] = useState<{ role: string; canAccessLeads: boolean; canAccessFinance: boolean } | null>(null);
+
+    useEffect(() => {
+        fetch("/api/auth/me")
+            .then(res => {
+                if (res.ok) return res.json();
+                return null;
+            })
+            .then(data => setCurrentUser(data as { role: string; canAccessLeads: boolean; canAccessFinance: boolean }))
+            .catch(err => console.error("Failed to fetch user", err));
+    }, []);
 
 
     const currentTab = pathname.split("/")[2] || "dashboard";
@@ -55,17 +67,20 @@ export default function DashboardLayout({
                                         <CheckSquare size={18} /> Tasks
                                     </TabsTrigger>
                                 </Link>
-                                <Link href="/dashboard/leads">
-                                    <TabsTrigger value="leads" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                        <UserPlus size={18} /> Leads
-                                    </TabsTrigger>
-                                </Link>
-                                <Link href="/dashboard/sales">
-                                    <TabsTrigger value="sales" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
-                                        <CreditCard size={18} /> Finance
-                                    </TabsTrigger>
-                                </Link>
-
+                                {(currentUser?.role === "admin" || currentUser?.canAccessLeads) && (
+                                    <Link href="/dashboard/leads">
+                                        <TabsTrigger value="leads" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
+                                            <UserPlus size={18} /> Leads
+                                        </TabsTrigger>
+                                    </Link>
+                                )}
+                                {(currentUser?.role === "admin" || currentUser?.canAccessFinance) && (
+                                    <Link href="/dashboard/sales">
+                                        <TabsTrigger value="sales" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-3 py-2 gap-2">
+                                            <CreditCard size={18} /> Finance
+                                        </TabsTrigger>
+                                    </Link>
+                                )}
                             </TabsList>
                         </Tabs>
                     </div>
@@ -79,13 +94,17 @@ export default function DashboardLayout({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem asChild>
-                                    <Link href="/dashboard/admin" className="flex items-center cursor-pointer">
-                                        <Settings size={16} className="mr-2" />
-                                        Admin
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
+                                {currentUser?.role === "admin" && (
+                                    <>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/dashboard/admin" className="flex items-center cursor-pointer">
+                                                <Settings size={16} className="mr-2" />
+                                                Admin
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
                                 <DropdownMenuItem
                                     onClick={handleLogout}
                                     className="text-red-600 focus:text-red-600 cursor-pointer"
