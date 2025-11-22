@@ -75,7 +75,10 @@ function ProjectsContent() {
         if (tab) {
             setActiveTab(tab);
         }
-    }, [searchParams]);
+        if (searchParams.get("new") === "true") {
+            router.push("/dashboard/projects/new");
+        }
+    }, [searchParams, router]);
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);

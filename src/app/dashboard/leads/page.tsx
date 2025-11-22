@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit2, Trash2, TrendingUp, Search } from "lucide-react";
+import { Plus, Edit2, Trash2, TrendingUp, Search, Users, Phone, Trophy, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -30,13 +30,18 @@ interface Lead {
     createdAt: string;
 }
 
-export default function LeadsPage() {
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { Suspense } from "react";
+
+function LeadsContent() {
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
     const [editingLead, setEditingLead] = useState<Lead | null>(null);
-
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
     const [name, setName] = useState("");
     const [contactMode, setContactMode] = useState("");
@@ -44,11 +49,7 @@ export default function LeadsPage() {
     const [status, setStatus] = useState("new");
     const [value, setValue] = useState("");
 
-    useEffect(() => {
-        fetchLeads();
-    }, []);
-
-    const fetchLeads = async () => {
+    const fetchLeads = useCallback(async () => {
         try {
             const res = await fetch("/api/leads");
             if (res.ok) {
@@ -58,9 +59,18 @@ export default function LeadsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const openDialog = (lead?: Lead) => {
+    const resetForm = useCallback(() => {
+        setEditingLead(null);
+        setName("");
+        setContactMode("");
+        setDescription("");
+        setStatus("new");
+        setValue("");
+    }, []);
+
+    const openDialog = useCallback((lead?: Lead) => {
         if (lead) {
             setEditingLead(lead);
             setName(lead.name);
@@ -72,16 +82,16 @@ export default function LeadsPage() {
             resetForm();
         }
         setOpen(true);
-    };
+    }, [resetForm]);
 
-    const resetForm = () => {
-        setEditingLead(null);
-        setName("");
-        setContactMode("");
-        setDescription("");
-        setStatus("new");
-        setValue("");
-    };
+    useEffect(() => {
+        fetchLeads();
+        if (searchParams.get("new") === "true") {
+            openDialog();
+            // Optional: Remove the param from URL to prevent reopening on refresh
+            router.replace("/dashboard/leads");
+        }
+    }, [searchParams, fetchLeads, openDialog, router]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -223,37 +233,46 @@ export default function LeadsPage() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <Card>
+                    <Card className="border-l-4 border-l-blue-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            <Users className="h-4 w-4 text-blue-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{leads.length}</div>
+                            <p className="text-xs text-muted-foreground mt-1">All time</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-l-4 border-l-orange-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">New</CardTitle>
+                            <Target className="h-4 w-4 text-orange-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{leads.filter(l => l.status === "new").length}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Needs follow-up</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-l-4 border-l-purple-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Contacted</CardTitle>
+                            <Phone className="h-4 w-4 text-purple-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{leads.filter(l => l.status === "contacted").length}</div>
+                            <p className="text-xs text-muted-foreground mt-1">In progress</p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-l-4 border-l-green-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Won</CardTitle>
+                            <Trophy className="h-4 w-4 text-green-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{leads.filter(l => l.status === "won").length}</div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {leads.length > 0 ? `${((leads.filter(l => l.status === "won").length / leads.length) * 100).toFixed(1)}% conversion` : 'No data'}
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
@@ -363,9 +382,7 @@ export default function LeadsPage() {
                                 {filteredLeads.filter(l => l.status === col.id).map(lead => (
                                     <Card
                                         key={lead.id}
-                                        className="cursor-move hover:shadow-md transition-shadow"
-                                        draggable
-                                        onDragStart={() => handleDragStart(lead)}
+                                        className="cursor-pointer hover:shadow-md transition-shadow"
                                         onClick={() => openDialog(lead)}
                                     >
                                         <CardContent className="p-4 space-y-2">
@@ -471,5 +488,13 @@ export default function LeadsPage() {
                 </DialogContent>
             </Dialog>
         </div >
+    );
+}
+
+export default function LeadsPage() {
+    return (
+        <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
+            <LeadsContent />
+        </Suspense>
     );
 }

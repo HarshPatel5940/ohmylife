@@ -180,7 +180,7 @@ export default function NewProjectPage() {
                             </div>
                         </div>
                         <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
+                            <Button variant="outline" type="button" onClick={() => router.push("/dashboard/projects")}>Cancel</Button>
                             <Button type="submit" disabled={loading}>
                                 {loading ? "Creating..." : "Create Project"}
                             </Button>

@@ -15,9 +15,10 @@ import { Label } from "@/components/ui/label";
 
 interface TeamMember {
     id: number;
-    personId: number;
+    name: string;
     role: string;
-    personName?: string;
+    email: string;
+    personId?: number; // For compatibility if needed, but main ID is 'id'
 }
 
 interface Person {
@@ -75,13 +76,8 @@ export function ProjectTeam({ teamMembers, people, projectId, onTeamChange, curr
         }
     };
 
-    const getPersonName = (personId: number) => {
-        const person = people.find(p => p.id === personId);
-        return person?.name || "Unknown";
-    };
-
     const availablePeople = people.filter(
-        p => !teamMembers.some(tm => tm.personId === p.id)
+        p => !teamMembers.some(tm => tm.id === p.id)
     );
 
     return (
@@ -111,7 +107,7 @@ export function ProjectTeam({ teamMembers, people, projectId, onTeamChange, curr
                                     </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-medium">{getPersonName(member.personId)}</p>
+                                    <p className="font-medium">{member.name}</p>
                                     <p className="text-sm text-gray-500 capitalize">{member.role}</p>
                                 </div>
                             </div>

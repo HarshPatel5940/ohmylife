@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit2, Trash2, Search } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, TrendingUp, TrendingDown, Wallet, FileText, DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,11 @@ interface Project {
     clientId: number;
 }
 
-export default function SalesPage() {
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { Suspense } from "react";
+
+function SalesContent() {
     const [sales, setSales] = useState<Sale[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -60,11 +64,14 @@ export default function SalesPage() {
     const [editingSale, setEditingSale] = useState<Sale | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
     const [clients, setClients] = useState<Client[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const [timeFilter, setTimeFilter] = useState<string>("30d");
-
+    const [activeTab, setActiveTab] = useState("all");
+    const [statusFilter, setStatusFilter] = useState<string>("all");
 
     const [type, setType] = useState("income");
     const [subType, setSubType] = useState("invoice");
@@ -78,9 +85,6 @@ export default function SalesPage() {
     const [clientId, setClientId] = useState("");
     const [category, setCategory] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("");
-
-
-
 
     const fetchSales = useCallback(async () => {
         try {
@@ -126,18 +130,32 @@ export default function SalesPage() {
         const year = today.getFullYear();
         const datePrefix = `${day}${month}${year}`;
 
-
         const todayInvoices = sales.filter(s => {
             if (!s.invoiceNumber) return false;
             return s.invoiceNumber.startsWith(datePrefix);
         });
-
 
         const sequence = todayInvoices.length + 1;
         const sequenceStr = String(sequence).padStart(2, '0');
 
         return `${datePrefix}${sequenceStr}`;
     }, [sales]);
+
+    const resetForm = () => {
+        setEditingSale(null);
+        setType("income");
+        setSubType("invoice");
+        setDescription("");
+        setAmount("");
+        setAmountReceived("");
+        setStatus("draft");
+        setDueDate("");
+        setInvoiceNumber("");
+        setProjectId("");
+        setClientId("");
+        setCategory("");
+        setPaymentMethod("");
+    };
 
     useEffect(() => {
         fetchSales();
@@ -146,11 +164,17 @@ export default function SalesPage() {
     }, [fetchSales, fetchClients, fetchProjects]);
 
     useEffect(() => {
-        fetchSales();
-    }, [fetchSales]);
+        if (searchParams.get("new") === "true") {
+            resetForm();
+            setOpen(true);
+        }
+        if (searchParams.get("filter") === "overdue") {
+            setStatusFilter("overdue");
+            setActiveTab("income");
+        }
+    }, [searchParams]);
 
     useEffect(() => {
-
         if (subType === 'invoice' && !editingSale && !invoiceNumber) {
             setInvoiceNumber(generateInvoiceNumber());
         }
@@ -186,22 +210,6 @@ export default function SalesPage() {
         setOpen(true);
     };
 
-    const resetForm = () => {
-        setEditingSale(null);
-        setType("income");
-        setSubType("invoice");
-        setDescription("");
-        setAmount("");
-        setAmountReceived("");
-        setStatus("draft");
-        setDueDate("");
-        setInvoiceNumber("");
-        setProjectId("");
-        setClientId("");
-        setCategory("");
-        setPaymentMethod("");
-    };
-
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -221,8 +229,7 @@ export default function SalesPage() {
             };
 
             if (editingSale) {
-
-                const res = await fetch(`/ api / sales / ${editingSale.id} `, {
+                const res = await fetch(`/api/sales/${editingSale.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
@@ -233,7 +240,6 @@ export default function SalesPage() {
                     fetchSales();
                 }
             } else {
-
                 const res = await fetch("/api/sales", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -258,7 +264,7 @@ export default function SalesPage() {
     const handleDelete = async () => {
         if (!saleToDelete) return;
         try {
-            const res = await fetch(`/ api / sales / ${saleToDelete.id} `, {
+            const res = await fetch(`/api/sales/${saleToDelete.id}`, {
                 method: "DELETE",
             });
             if (res.ok) {
@@ -272,13 +278,17 @@ export default function SalesPage() {
     };
 
     const filteredSales = useMemo(() => {
-        return sales.filter(s =>
-        (s.description?.toLowerCase().includes(search.toLowerCase()) ||
-            s.clientName?.toLowerCase().includes(search.toLowerCase()) ||
-            s.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
-            s.amount.toString().includes(search))
-        );
-    }, [sales, search]);
+        return sales.filter(s => {
+            const matchesSearch = (s.description?.toLowerCase().includes(search.toLowerCase()) ||
+                s.clientName?.toLowerCase().includes(search.toLowerCase()) ||
+                s.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
+                s.amount.toString().includes(search));
+
+            const matchesStatus = statusFilter === "all" || s.status === statusFilter;
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [sales, search, statusFilter]);
 
     const incomeTotal = useMemo(() => {
         return sales
@@ -342,31 +352,57 @@ export default function SalesPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="border-l-4 border-l-green-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-green-600">₹{incomeTotal.toLocaleString('en-IN')}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {sales.filter(s => s.type === 'income').length} transactions
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-l-4 border-l-red-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+                        <TrendingDown className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-red-600">₹{expenseTotal.toLocaleString('en-IN')}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {sales.filter(s => s.type === 'expense').length} transactions
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-l-4 border-l-blue-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+                        <Wallet className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
                         <div className={`text-2xl font-bold ${incomeTotal - expenseTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             ₹{(incomeTotal - expenseTotal).toLocaleString('en-IN')}
                         </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {incomeTotal > 0 ? `${(((incomeTotal - expenseTotal) / incomeTotal) * 100).toFixed(1)}% margin` : 'No income'}
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-orange-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
+                        <FileText className="h-4 w-4 text-orange-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">
+                            {sales.filter(s => s.type === 'income' && s.status !== 'paid').length}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            ₹{sales.filter(s => s.type === 'income' && s.status !== 'paid').reduce((acc, s) => acc + (s.amount - (s.amountReceived || 0)), 0).toLocaleString('en-IN')} pending
+                        </p>
                     </CardContent>
                 </Card>
             </div>
@@ -524,7 +560,7 @@ export default function SalesPage() {
                 />
             </div>
 
-            <Tabs defaultValue="all">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
                     <TabsTrigger value="all">All Transactions</TabsTrigger>
                     <TabsTrigger value="income">Income</TabsTrigger>
@@ -632,6 +668,14 @@ export default function SalesPage() {
                 confirmText="Delete"
             />
         </div >
+    );
+}
+
+export default function SalesPage() {
+    return (
+        <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
+            <SalesContent />
+        </Suspense>
     );
 }
 

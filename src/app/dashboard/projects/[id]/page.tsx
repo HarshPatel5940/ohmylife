@@ -81,9 +81,10 @@ interface ChatMessage {
 
 interface TeamMember {
     id: number;
-    personId: number;
+    name: string;
     role: string;
-    personName?: string;
+    email: string;
+    personId?: number;
 }
 
 interface Note {
