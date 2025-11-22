@@ -141,6 +141,8 @@ export default function ProjectDetailsPage() {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
 
@@ -161,8 +163,20 @@ export default function ProjectDetailsPage() {
 
             ws.onopen = () => console.log("Connected to chat");
             ws.onmessage = (event) => {
-                const message = JSON.parse(event.data);
-                setMessages(prev => [...prev, message]);
+                const data = JSON.parse(event.data);
+                if (data.type === "message") {
+                    setMessages(prev => [...prev, data.message]);
+                } else if (data.type === "typing") {
+                    setTypingUsers(prev => {
+                        const next = new Set(prev);
+                        if (data.isTyping) {
+                            next.add(data.senderName);
+                        } else {
+                            next.delete(data.senderName);
+                        }
+                        return next;
+                    });
+                }
             };
             ws.onclose = () => {
                 console.log("Disconnected from chat");
@@ -340,8 +354,65 @@ export default function ProjectDetailsPage() {
 
     const handleSendMessage = () => {
         if (!newMessage.trim() || !socket) return;
-        socket.send(JSON.stringify({ content: newMessage }));
+
+        // Send message with type 'message'
+        // Note: We need to send userId and senderName. 
+        // In a real app, these should be handled by the session/auth on the server or passed in.
+        // For now, we'll assume we have them or send placeholders if not available in context yet.
+        // Ideally, we should get the current user from a context or prop.
+        // Assuming 'people' list might contain the current user or we have a user object.
+        // Let's use a placeholder ID and Name if we don't have auth context here.
+        // TODO: Replace with actual user data
+        const currentUserId = 1; // Replace with actual user ID
+        const currentUserName = "Me"; // Replace with actual user name
+
+        socket.send(JSON.stringify({
+            type: "message",
+            projectId: parseInt(id as string),
+            userId: currentUserId,
+            senderName: currentUserName,
+            content: newMessage
+        }));
         setNewMessage("");
+
+        // Clear typing status immediately
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+        }
+        socket.send(JSON.stringify({
+            type: "typing",
+            userId: currentUserId,
+            senderName: currentUserName,
+            isTyping: false
+        }));
+    };
+
+    const handleTyping = () => {
+        if (!socket) return;
+
+        const currentUserId = 1; // Replace with actual user ID
+        const currentUserName = "Me"; // Replace with actual user name
+
+        socket.send(JSON.stringify({
+            type: "typing",
+            userId: currentUserId,
+            senderName: currentUserName,
+            isTyping: true
+        }));
+
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        typingTimeoutRef.current = setTimeout(() => {
+            socket.send(JSON.stringify({
+                type: "typing",
+                userId: currentUserId,
+                senderName: currentUserName,
+                isTyping: false
+            }));
+        }, 2000);
     };
 
     const getClientName = () => {
@@ -448,13 +519,21 @@ export default function ProjectDetailsPage() {
                                             </div>
                                         ))
                                     )}
+                                    {typingUsers.size > 0 && (
+                                        <div className="text-xs text-gray-500 italic">
+                                            {Array.from(typingUsers).join(", ")} {typingUsers.size === 1 ? "is" : "are"} typing...
+                                        </div>
+                                    )}
                                     <div ref={chatEndRef} />
                                 </div>
                                 <div className="flex gap-2">
                                     <Input
                                         placeholder="Type a message..."
                                         value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        onChange={(e) => {
+                                            setNewMessage(e.target.value);
+                                            handleTyping();
+                                        }}
                                         onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                                     />
                                     <Button onClick={handleSendMessage}>

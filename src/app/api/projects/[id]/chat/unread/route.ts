@@ -1,30 +1,32 @@
-import { getDb } from "@/lib/db";
-import { chatMessages, users } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { eq, desc } from "drizzle-orm";
-import { NextResponse } from "next/server";
-
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-    request: Request,
+    request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
         const { env } = await getCloudflareContext({ async: true });
         const projectId = params.id;
+        const searchParams = request.nextUrl.searchParams;
+        const userId = searchParams.get("userId");
+
+        if (!userId) {
+            return NextResponse.json({ error: "User ID required" }, { status: 400 });
+        }
 
         const id = env.CHAT_ROOM.idFromName(projectId);
         const stub = env.CHAT_ROOM.get(id);
 
-        const response = await stub.fetch("http://do/messages");
+        const response = await stub.fetch(`http://do/unread/${userId}`);
         if (!response.ok) {
             throw new Error(`DO returned ${response.status}`);
         }
 
-        const messages = await response.json();
-        return NextResponse.json(messages);
+        const data = await response.json();
+        return NextResponse.json(data);
     } catch (error) {
-        console.error("Error fetching messages from DO", error);
+        console.error("Error fetching unread count from DO", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
