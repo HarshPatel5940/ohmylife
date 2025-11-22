@@ -15,7 +15,7 @@ export class ChatRoom extends DurableObject {
         this.env = env;
         this.sql = ctx.storage.sql;
 
-        // Initialize database
+
         this.sql.exec(`
             CREATE TABLE IF NOT EXISTS messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,7 +75,7 @@ export class ChatRoom extends DurableObject {
                 const data = JSON.parse(event.data as string);
 
                 if (data.type === "message") {
-                    // Save to SQLite
+
                     const createdAt = Date.now();
                     this.sql.exec(`
                         INSERT INTO messages (projectId, userId, senderName, content, createdAt)
@@ -88,7 +88,7 @@ export class ChatRoom extends DurableObject {
                         id: this.sql.exec("SELECT last_insert_rowid() as id").one().id
                     };
 
-                    // Broadcast message
+
                     const broadcastData = JSON.stringify({
                         type: "message",
                         message: newMessage
@@ -100,13 +100,13 @@ export class ChatRoom extends DurableObject {
                         }
                     });
 
-                    // Update unread counts for others (simplified logic: increment for everyone else)
-                    // In a real app, you'd track who is in the room.
-                    // For now, we'll just increment for users who are NOT the sender if we knew who they were.
-                    // Since we don't track user IDs in sessions yet, we'll skip complex unread logic for now
-                    // or implement a basic version if needed.
+
+
+
+
+
                 } else if (data.type === "edit") {
-                    // Update in SQLite
+
                     this.sql.exec(`
                         UPDATE messages SET content = ? WHERE id = ?
                     `, data.content, data.messageId);
@@ -152,14 +152,14 @@ const worker = {
     async fetch(request: Request, env: any, ctx: any) {
         const url = new URL(request.url);
 
-        // Intercept WebSocket requests for chat to bypass OpenNext/Next.js
-        // This avoids the "RangeError: Responses may only be constructed with status codes in the range 200 to 599"
+
+
         if (url.pathname.match(/^\/api\/projects\/[^/]+\/chat$/) && request.headers.get("Upgrade") === "websocket") {
             const projectId = url.pathname.split("/")[3];
             const id = env.CHAT_ROOM.idFromName(projectId);
             const stub = env.CHAT_ROOM.get(id);
 
-            // Rewrite URL to match what ChatRoom expects
+
             const doUrl = new URL(request.url);
             doUrl.pathname = "/websocket";
 

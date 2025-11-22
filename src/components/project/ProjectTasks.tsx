@@ -21,10 +21,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Task {
     id: number;
     title: string;
+    description?: string;
     status: string;
     priority: string;
     assigneeId?: number;
@@ -48,6 +51,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
     const [taskDialogOpen, setTaskDialogOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [taskTitle, setTaskTitle] = useState("");
+    const [taskDescription, setTaskDescription] = useState("");
     const [taskStatus, setTaskStatus] = useState("todo");
     const [taskPriority, setTaskPriority] = useState("medium");
     const [taskAssigneeId, setTaskAssigneeId] = useState("none");
@@ -73,6 +77,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
         if (task) {
             setEditingTask(task);
             setTaskTitle(task.title);
+            setTaskDescription(task.description || "");
             setTaskStatus(task.status);
             setTaskPriority(task.priority);
             setTaskAssigneeId(task.assigneeId?.toString() || "none");
@@ -80,6 +85,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
         } else {
             setEditingTask(null);
             setTaskTitle("");
+            setTaskDescription("");
             setTaskStatus("todo");
             setTaskPriority("medium");
             setTaskAssigneeId("none");
@@ -95,6 +101,7 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
         try {
             const payload = {
                 title: taskTitle,
+                description: taskDescription,
                 priority: taskPriority,
                 status: taskStatus,
                 dueDate: taskDueDate || null,
@@ -177,24 +184,12 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                     <h3 className="text-lg font-medium">Project Tasks</h3>
                     <div className="flex gap-2">
                         {/* List/Board Toggle */}
-                        <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg flex">
-                            <Button
-                                variant={taskView === "list" ? "secondary" : "ghost"}
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() => setTaskView("list")}
-                            >
-                                List
-                            </Button>
-                            <Button
-                                variant={taskView === "board" ? "secondary" : "ghost"}
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() => setTaskView("board")}
-                            >
-                                Board
-                            </Button>
-                        </div>
+                        <Tabs value={taskView} onValueChange={(v) => setTaskView(v as "list" | "board")}>
+                            <TabsList className="h-8">
+                                <TabsTrigger value="list" className="text-xs h-6">List</TabsTrigger>
+                                <TabsTrigger value="board" className="text-xs h-6">Board</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                         <Button onClick={() => openTaskDialog()}>
                             <Plus className="mr-2 h-4 w-4" /> Add Task
                         </Button>
@@ -311,6 +306,11 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                                         <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-medium text-sm line-clamp-2">{task.title}</h4>
                                         </div>
+                                        {task.description && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
+                                                {task.description}
+                                            </p>
+                                        )}
 
                                         <div className="flex gap-2 items-center mt-3 flex-wrap">
                                             <span className={`text-[10px] px-2 py-0.5 rounded font-medium uppercase tracking-wide ${getPriorityColor(task.priority)}`}>
@@ -352,6 +352,16 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                                     value={taskTitle}
                                     onChange={(e) => setTaskTitle(e.target.value)}
                                     required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                    id="description"
+                                    value={taskDescription}
+                                    onChange={(e) => setTaskDescription(e.target.value)}
+                                    rows={3}
+                                    placeholder="Optional task description..."
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">

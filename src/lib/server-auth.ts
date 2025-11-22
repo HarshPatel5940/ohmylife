@@ -16,7 +16,7 @@ export async function getAuthenticatedUser(env: any) {
 
         const db = getDb(env);
 
-        // Fetch fresh user data
+
         const user = await db.query.users.findFirst({
             where: eq(users.id, payload.id),
             with: {

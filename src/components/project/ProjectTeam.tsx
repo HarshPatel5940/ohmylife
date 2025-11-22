@@ -31,9 +31,10 @@ interface ProjectTeamProps {
     people: Person[];
     projectId: number;
     onTeamChange: () => void;
+    currentUserRole?: string;
 }
 
-export function ProjectTeam({ teamMembers, people, projectId, onTeamChange }: ProjectTeamProps) {
+export function ProjectTeam({ teamMembers, people, projectId, onTeamChange, currentUserRole }: ProjectTeamProps) {
     const [addMemberOpen, setAddMemberOpen] = useState(false);
     const [selectedPersonId, setSelectedPersonId] = useState("");
     const [memberRole, setMemberRole] = useState("member");
@@ -87,9 +88,11 @@ export function ProjectTeam({ teamMembers, people, projectId, onTeamChange }: Pr
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Team Members</h3>
-                <Button onClick={() => setAddMemberOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" /> Add Member
-                </Button>
+                {currentUserRole === "admin" && (
+                    <Button onClick={() => setAddMemberOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" /> Add Member
+                    </Button>
+                )}
             </div>
 
             <div className="space-y-3">
@@ -112,13 +115,15 @@ export function ProjectTeam({ teamMembers, people, projectId, onTeamChange }: Pr
                                     <p className="text-sm text-gray-500 capitalize">{member.role}</p>
                                 </div>
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveMember(member.id)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {currentUserRole === "admin" && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveMember(member.id)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            )}
                         </div>
                     ))
                 )}
@@ -173,6 +178,6 @@ export function ProjectTeam({ teamMembers, people, projectId, onTeamChange }: Pr
                     </form>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

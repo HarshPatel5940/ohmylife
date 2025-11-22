@@ -146,10 +146,10 @@ function ProjectDetailsContent() {
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
-    const [currentUser, setCurrentUser] = useState<{ id: number; username: string } | null>(null);
+    const [currentUser, setCurrentUser] = useState<{ id: number; username: string; role: string } | null>(null);
     const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
     const [editContent, setEditContent] = useState("");
-    const [noteClickState, setNoteClickState] = useState<{ [key: number]: number }>({}); // msgId -> click count
+    const [noteClickState, setNoteClickState] = useState<{ [key: number]: number }>({});
 
     useEffect(() => {
         fetch("/api/auth/me")
@@ -157,7 +157,7 @@ function ProjectDetailsContent() {
                 if (res.ok) return res.json();
                 throw new Error("Not authenticated");
             })
-            .then(data => setCurrentUser(data as { id: number; username: string }))
+            .then(data => setCurrentUser(data as { id: number; username: string; role: string }))
             .catch(err => console.error("Failed to fetch user", err));
     }, []);
 
@@ -316,15 +316,18 @@ function ProjectDetailsContent() {
 
     useEffect(() => {
         if (id) {
-            fetchProject();
-            fetchTasks();
-            fetchPeople();
-            fetchClients();
-            fetchFiles();
-            fetchNotes();
-            fetchTeamMembers();
+            if (activeTab === "tasks") {
+                fetchTasks();
+                fetchPeople();
+            }
+            if (activeTab === "team") {
+                fetchTeamMembers();
+                fetchPeople();
+            }
+            if (activeTab === "files") fetchFiles();
+            if (activeTab === "notes") fetchNotes();
         }
-    }, [id, fetchProject, fetchTasks, fetchPeople, fetchClients, fetchFiles, fetchNotes, fetchTeamMembers]);
+    }, [id, activeTab, fetchTasks, fetchTeamMembers, fetchFiles, fetchNotes, fetchPeople]);
 
     const openEditDialog = () => {
         if (!project) return;
@@ -384,7 +387,7 @@ function ProjectDetailsContent() {
         }));
         setNewMessage("");
 
-        // Clear typing status immediately
+
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
             typingTimeoutRef.current = null;
@@ -442,11 +445,11 @@ function ProjectDetailsContent() {
         const currentClicks = noteClickState[msgId] || 0;
 
         if (currentClicks === 0) {
-            // First click
+
             setNoteClickState(prev => ({ ...prev, [msgId]: 1 }));
             toast.info("Click again to save as note");
 
-            // Reset after 3 seconds
+
             setTimeout(() => {
                 setNoteClickState(prev => {
                     const newState = { ...prev };
@@ -457,7 +460,7 @@ function ProjectDetailsContent() {
             return;
         }
 
-        // Second click - perform action
+
         try {
             const res = await fetch(`/api/projects/${id}/notes`, {
                 method: "POST",
@@ -470,7 +473,7 @@ function ProjectDetailsContent() {
             if (res.ok) {
                 toast.success("Note added successfully");
                 fetchNotes();
-                // Reset state
+
                 setNoteClickState(prev => {
                     const newState = { ...prev };
                     delete newState[msgId];
@@ -539,6 +542,7 @@ function ProjectDetailsContent() {
                         people={people}
                         projectId={project.id}
                         onTeamChange={fetchTeamMembers}
+                        currentUserRole={currentUser?.role}
                     />
                 </TabsContent>
 
