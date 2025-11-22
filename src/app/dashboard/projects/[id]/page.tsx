@@ -92,7 +92,9 @@ interface Note {
     createdAt: string;
 }
 
-export default function ProjectDetailsPage() {
+import { Suspense } from "react";
+
+function ProjectDetailsContent() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -505,7 +507,7 @@ export default function ProjectDetailsPage() {
             />
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -744,5 +746,13 @@ export default function ProjectDetailsPage() {
                 description={`Are you sure you want to delete "${project.name}"? This action cannot be undone and will delete all associated tasks, files, and notes.`}
             />
         </div>
+    );
+}
+
+export default function ProjectDetailsPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ProjectDetailsContent />
+        </Suspense>
     );
 }

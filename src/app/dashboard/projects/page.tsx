@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Calendar, Edit2, Trash2, User, Search, MoreVertical, Building2, DollarSign, Mail, Phone } from "lucide-react";
@@ -57,14 +57,30 @@ interface Person {
     status: string;
 }
 
-export default function ProjectsPage() {
+import { Suspense } from "react";
+
+function ProjectsContent() {
     const router = useRouter();
     const [projects, setProjects] = useState<Project[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
     const [activeTab, setActiveTab] = useState("projects");
+
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value);
+        router.replace(`${pathname}?tab=${value}`, { scroll: false });
+    };
 
 
     const [clientDialogOpen, setClientDialogOpen] = useState(false);
@@ -310,7 +326,7 @@ export default function ProjectsPage() {
     return (
         <div className="space-y-6">
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects Management</h1>
                     <div className="flex flex-row space-x-6 items-center">
@@ -905,5 +921,13 @@ export default function ProjectsPage() {
                 description={`Are you sure you want to delete "${itemToDelete?.name}"? This action cannot be undone.`}
             />
         </div>
+    );
+}
+
+export default function ProjectsPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ProjectsContent />
+        </Suspense>
     );
 }

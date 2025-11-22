@@ -149,6 +149,24 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
         return person?.name || "Unknown";
     };
 
+    const getPriorityColor = (priority: string) => {
+        switch (priority) {
+            case "high": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+            case "medium": return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+            case "low": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+            default: return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "done": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+            case "in-progress": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+            case "todo": return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+            default: return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+        }
+    };
+
 
 
     return (
@@ -232,14 +250,14 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                                     <TableRow key={task.id}>
                                         <TableCell className="font-medium">{task.title}</TableCell>
                                         <TableCell>
-                                            <Badge variant={task.status === "done" ? "default" : "secondary"}>
+                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(task.status)}`}>
                                                 {task.status}
-                                            </Badge>
+                                            </span>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant={task.priority === "high" ? "destructive" : "outline"}>
+                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(task.priority)}`}>
                                                 {task.priority}
-                                            </Badge>
+                                            </span>
                                         </TableCell>
                                         <TableCell>{getAssigneeName(task.assigneeId)}</TableCell>
                                         <TableCell>
@@ -268,31 +286,45 @@ export function ProjectTasks({ tasks, people, projectId, onTasksChange }: Projec
                     </Table>
                 </div>
             ) : (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-300px)]">
                     {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
-                        <div key={status} className="space-y-2">
-                            <h4 className="font-medium capitalize flex items-center justify-between">
-                                {status.replace("-", " ")}
-                                <Badge variant="outline">{statusTasks.length}</Badge>
-                            </h4>
-                            <div className="space-y-2">
+                        <div
+                            key={status}
+                            className="min-w-[300px] w-full bg-gray-100 dark:bg-gray-800/50 rounded-lg p-4 flex flex-col gap-3"
+                        >
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="font-semibold text-gray-700 dark:text-gray-300 capitalize">
+                                    {status.replace("-", " ")}
+                                </h3>
+                                <span className="text-xs bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded-full">
+                                    {statusTasks.length}
+                                </span>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                                 {statusTasks.map((task) => (
                                     <div
                                         key={task.id}
-                                        className="p-3 border rounded-lg bg-white dark:bg-gray-800 hover:shadow-md transition-shadow cursor-pointer"
+                                        className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-all"
                                         onClick={() => openTaskDialog(task)}
                                     >
-                                        <h5 className="font-medium mb-2">{task.title}</h5>
-                                        <div className="flex items-center justify-between text-xs text-gray-500">
-                                            <Badge variant={task.priority === "high" ? "destructive" : "outline"} className="text-xs">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h4 className="font-medium text-sm line-clamp-2">{task.title}</h4>
+                                        </div>
+
+                                        <div className="flex gap-2 items-center mt-3 flex-wrap">
+                                            <span className={`text-[10px] px-2 py-0.5 rounded font-medium uppercase tracking-wide ${getPriorityColor(task.priority)}`}>
                                                 {task.priority}
-                                            </Badge>
+                                            </span>
                                             {task.dueDate && (
-                                                <span className="flex items-center">
+                                                <span className="text-xs text-gray-400 ml-auto flex items-center">
                                                     <Calendar className="h-3 w-3 mr-1" />
-                                                    {new Date(task.dueDate).toLocaleDateString()}
+                                                    {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                 </span>
                                             )}
+                                        </div>
+                                        <div className="mt-2 text-xs text-gray-500">
+                                            {getAssigneeName(task.assigneeId)}
                                         </div>
                                     </div>
                                 ))}
