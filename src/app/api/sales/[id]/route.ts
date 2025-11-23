@@ -4,67 +4,73 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const body = (await request.json()) as any;
+    const {
+      type,
+      description,
+      amount,
+      category,
+      clientId,
+      invoiceNumber,
+      status,
+      dueDate,
+      amountReceived,
+      personId,
+      paymentMethod,
+    } = body;
 
-export async function PATCH(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const body = await request.json() as any;
-        const { type, description, amount, category, clientId, invoiceNumber, status, dueDate, amountReceived, personId, paymentMethod } = body;
+    const { env } = await getCloudflareContext({ async: true });
+    const db = getDb(env);
+    const transactionId = parseInt(params.id);
 
-        const { env } = await getCloudflareContext({ async: true });
-        const db = getDb(env);
-        const transactionId = parseInt(params.id);
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
 
-        const updateData: any = {
-            updatedAt: new Date(),
-        };
+    if (description !== undefined) updateData.description = description;
+    if (amount !== undefined) updateData.amount = Math.max(0, parseFloat(amount));
+    if (category !== undefined) updateData.category = category;
+    if (type !== undefined) updateData.type = type;
 
-        if (description !== undefined) updateData.description = description;
-        if (amount !== undefined) updateData.amount = parseFloat(amount);
-        if (category !== undefined) updateData.category = category;
-        if (type !== undefined) updateData.type = type;
+    if (invoiceNumber !== undefined) updateData.invoiceNumber = invoiceNumber;
+    if (clientId !== undefined) updateData.clientId = clientId ? parseInt(clientId) : null;
+    if (amountReceived !== undefined)
+      updateData.amountReceived = Math.max(0, parseFloat(amountReceived));
+    if (status !== undefined) updateData.status = status;
+    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
 
+    if (personId !== undefined) updateData.personId = personId ? parseInt(personId) : null;
+    if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
 
-        if (invoiceNumber !== undefined) updateData.invoiceNumber = invoiceNumber;
-        if (clientId !== undefined) updateData.clientId = clientId ? parseInt(clientId) : null;
-        if (amountReceived !== undefined) updateData.amountReceived = parseFloat(amountReceived);
-        if (status !== undefined) updateData.status = status;
-        if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    const updated = await db
+      .update(transactions)
+      .set(updateData)
+      .where(eq(transactions.id, transactionId))
+      .returning();
 
-
-        if (personId !== undefined) updateData.personId = personId ? parseInt(personId) : null;
-        if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
-
-        const updated = await db.update(transactions)
-            .set(updateData)
-            .where(eq(transactions.id, transactionId))
-            .returning();
-
-        return NextResponse.json(updated[0]);
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-    }
+    return NextResponse.json(updated[0]);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
-export async function DELETE(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
-    try {
-        const { env } = await getCloudflareContext({ async: true });
-        const db = getDb(env);
-        const transactionId = parseInt(params.id);
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { env } = await getCloudflareContext({ async: true });
+    const db = getDb(env);
+    const transactionId = parseInt(params.id);
 
-        await db.update(transactions)
-            .set({ deletedAt: new Date() })
-            .where(eq(transactions.id, transactionId));
+    await db
+      .update(transactions)
+      .set({ deletedAt: new Date() })
+      .where(eq(transactions.id, transactionId));
 
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
