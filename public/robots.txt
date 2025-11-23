@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /$
+Allow: /login$
+
+# Disallow everything else (dashboard, API routes, etc.)
+Disallow: /
+
+# Sitemap
+Sitemap: https://oml.harshnpatel.in/sitemap.xml
+

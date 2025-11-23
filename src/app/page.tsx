@@ -1,9 +1,63 @@
 import React from 'react';
 import { ArrowRight, Github } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "OhMyLife - Agency Management Platform",
+  description: "Base infrastructure to manage your agency which is easy to self-host and built upon. Uses the power of Cloudflare to quickly deliver robust solutions for projects, clients, finances, and tasks.",
+  keywords: ["agency management", "self-hosted", "cloudflare", "open source", "project management", "client management", "finance tracking", "task management", "team collaboration"],
+  openGraph: {
+    title: "OhMyLife - Agency Management Made Minimal",
+    description: "Self-host in minutes. A lean foundation for projects, clients, finances, and tasks. Simple by design. Powerful by choice.",
+    type: "website",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OhMyLife - Agency Management Made Minimal",
+    description: "Self-host in minutes. A lean foundation for projects, clients, finances, and tasks.",
+  },
+};
 
 export default function LandingPage() {
+  // Structured Data (JSON-LD) for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "OhMyLife",
+    "description": "Base infrastructure to manage your agency which is easy to self-host and built upon. Uses the power of Cloudflare to quickly deliver robust solutions.",
+    "url": process.env.NEXT_PUBLIC_APP_URL || "https://oml.harshnpatel.in",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Project Management",
+      "Client Management",
+      "Finance Tracking",
+      "Task Management",
+      "Team Collaboration",
+      "Self-Hosted Solution"
+    ],
+    "softwareVersion": "1.0",
+    "author": {
+      "@type": "Person",
+      "name": "Harsh Patel",
+      "url": "https://github.com/harshpatel5940"
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-950">
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+
       {/* Single Screen Section */}
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 py-12 sm:py-16 md:py-20">
         <div className="max-w-4xl">
