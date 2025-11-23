@@ -1,0 +1,1002 @@
+{
+    "version": "6",
+    "dialect": "sqlite",
+    "id": "df06e88c-bf96-4c41-ae98-bff4ae7122c9",
+    "prevId": "f82459c6-e846-4c21-b646-a0a5c651edf8",
+    "tables": {
+        "chat_messages": {
+            "name": "chat_messages",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "project_id": {
+                    "name": "project_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "content": {
+                    "name": "content",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "chat_messages_project_id_projects_id_fk": {
+                    "name": "chat_messages_project_id_projects_id_fk",
+                    "tableFrom": "chat_messages",
+                    "tableTo": "projects",
+                    "columnsFrom": ["project_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                },
+                "chat_messages_user_id_users_id_fk": {
+                    "name": "chat_messages_user_id_users_id_fk",
+                    "tableFrom": "chat_messages",
+                    "tableTo": "users",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "clients": {
+            "name": "clients",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "email": {
+                    "name": "email",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "phone": {
+                    "name": "phone",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "company": {
+                    "name": "company",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "address": {
+                    "name": "address",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "files": {
+            "name": "files",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "project_id": {
+                    "name": "project_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "key": {
+                    "name": "key",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "size": {
+                    "name": "size",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "type": {
+                    "name": "type",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "url": {
+                    "name": "url",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "uploaded_by": {
+                    "name": "uploaded_by",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "files_project_id_projects_id_fk": {
+                    "name": "files_project_id_projects_id_fk",
+                    "tableFrom": "files",
+                    "tableTo": "projects",
+                    "columnsFrom": ["project_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                },
+                "files_uploaded_by_users_id_fk": {
+                    "name": "files_uploaded_by_users_id_fk",
+                    "tableFrom": "files",
+                    "tableTo": "users",
+                    "columnsFrom": ["uploaded_by"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "leads": {
+            "name": "leads",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "contact_mode": {
+                    "name": "contact_mode",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "description": {
+                    "name": "description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "status": {
+                    "name": "status",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'new'"
+                },
+                "value": {
+                    "name": "value",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "notes": {
+            "name": "notes",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "project_id": {
+                    "name": "project_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "user_id": {
+                    "name": "user_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "title": {
+                    "name": "title",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "content": {
+                    "name": "content",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "notes_project_id_projects_id_fk": {
+                    "name": "notes_project_id_projects_id_fk",
+                    "tableFrom": "notes",
+                    "tableTo": "projects",
+                    "columnsFrom": ["project_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                },
+                "notes_user_id_users_id_fk": {
+                    "name": "notes_user_id_users_id_fk",
+                    "tableFrom": "notes",
+                    "tableTo": "users",
+                    "columnsFrom": ["user_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "people": {
+            "name": "people",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "role": {
+                    "name": "role",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "email": {
+                    "name": "email",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "phone": {
+                    "name": "phone",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "status": {
+                    "name": "status",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'hiring'"
+                },
+                "hourly_rate": {
+                    "name": "hourly_rate",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "project_id": {
+                    "name": "project_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "projects": {
+            "name": "projects",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "name": {
+                    "name": "name",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "description": {
+                    "name": "description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "client_id": {
+                    "name": "client_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "status": {
+                    "name": "status",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'active'"
+                },
+                "start_date": {
+                    "name": "start_date",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "end_date": {
+                    "name": "end_date",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "projects_client_id_clients_id_fk": {
+                    "name": "projects_client_id_clients_id_fk",
+                    "tableFrom": "projects",
+                    "tableTo": "clients",
+                    "columnsFrom": ["client_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "tasks": {
+            "name": "tasks",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "title": {
+                    "name": "title",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "description": {
+                    "name": "description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "type": {
+                    "name": "type",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'personal'"
+                },
+                "status": {
+                    "name": "status",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'todo'"
+                },
+                "priority": {
+                    "name": "priority",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "'medium'"
+                },
+                "due_date": {
+                    "name": "due_date",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "project_id": {
+                    "name": "project_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "assignee_id": {
+                    "name": "assignee_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "tasks_project_id_projects_id_fk": {
+                    "name": "tasks_project_id_projects_id_fk",
+                    "tableFrom": "tasks",
+                    "tableTo": "projects",
+                    "columnsFrom": ["project_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                },
+                "tasks_assignee_id_people_id_fk": {
+                    "name": "tasks_assignee_id_people_id_fk",
+                    "tableFrom": "tasks",
+                    "tableTo": "people",
+                    "columnsFrom": ["assignee_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "transactions": {
+            "name": "transactions",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "type": {
+                    "name": "type",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "description": {
+                    "name": "description",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "amount": {
+                    "name": "amount",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "date": {
+                    "name": "date",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "category": {
+                    "name": "category",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "project_id": {
+                    "name": "project_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "client_id": {
+                    "name": "client_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "invoice_number": {
+                    "name": "invoice_number",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "amount_received": {
+                    "name": "amount_received",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": 0
+                },
+                "status": {
+                    "name": "status",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "due_date": {
+                    "name": "due_date",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "person_id": {
+                    "name": "person_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "payment_method": {
+                    "name": "payment_method",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "transactions_project_id_projects_id_fk": {
+                    "name": "transactions_project_id_projects_id_fk",
+                    "tableFrom": "transactions",
+                    "tableTo": "projects",
+                    "columnsFrom": ["project_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                },
+                "transactions_client_id_clients_id_fk": {
+                    "name": "transactions_client_id_clients_id_fk",
+                    "tableFrom": "transactions",
+                    "tableTo": "clients",
+                    "columnsFrom": ["client_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                },
+                "transactions_person_id_people_id_fk": {
+                    "name": "transactions_person_id_people_id_fk",
+                    "tableFrom": "transactions",
+                    "tableTo": "people",
+                    "columnsFrom": ["person_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        },
+        "users": {
+            "name": "users",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "autoincrement": true
+                },
+                "username": {
+                    "name": "username",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "password_hash": {
+                    "name": "password_hash",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false
+                },
+                "role": {
+                    "name": "role",
+                    "type": "text",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "autoincrement": false,
+                    "default": "'user'"
+                },
+                "person_id": {
+                    "name": "person_id",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "can_access_leads": {
+                    "name": "can_access_leads",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": false
+                },
+                "can_access_finance": {
+                    "name": "can_access_finance",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": false
+                },
+                "password_changed_at": {
+                    "name": "password_changed_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                },
+                "created_at": {
+                    "name": "created_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "updated_at": {
+                    "name": "updated_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false,
+                    "default": "(strftime('%s', 'now'))"
+                },
+                "deleted_at": {
+                    "name": "deleted_at",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": false,
+                    "autoincrement": false
+                }
+            },
+            "indexes": {
+                "users_username_unique": {
+                    "name": "users_username_unique",
+                    "columns": ["username"],
+                    "isUnique": true
+                }
+            },
+            "foreignKeys": {
+                "users_person_id_people_id_fk": {
+                    "name": "users_person_id_people_id_fk",
+                    "tableFrom": "users",
+                    "tableTo": "people",
+                    "columnsFrom": ["person_id"],
+                    "columnsTo": ["id"],
+                    "onDelete": "no action",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {}
+        }
+    },
+    "enums": {},
+    "_meta": {
+        "schemas": {},
+        "tables": {},
+        "columns": {}
+    },
+    "internal": {
+        "indexes": {}
+    }
+}

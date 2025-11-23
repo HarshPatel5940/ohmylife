@@ -23,11 +23,13 @@ Ideally the individual should build on top of this.
 ## Getting Started
 
 1.  Install dependencies:
+
     ```bash
     npm install
     ```
 
 2.  Run locally:
+
     ```bash
     npm run dev
     ```
