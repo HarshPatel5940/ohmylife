@@ -128,6 +128,7 @@ export const files = sqliteTable("files", {
   type: text("type").notNull(),
   url: text("url"),
   uploadedBy: integer("uploaded_by").references(() => users.id),
+  isPrivate: integer("is_private", { mode: "boolean" }).default(false),
   ...timestamps,
 });
 
@@ -138,6 +139,7 @@ export const excalidrawDrawings = sqliteTable("excalidraw_drawings", {
   key: text("key").notNull(),
   thumbnailKey: text("thumbnail_key"),
   createdBy: integer("created_by").references(() => users.id),
+  isPrivate: integer("is_private", { mode: "boolean" }).default(false),
   ...timestamps,
 });
 

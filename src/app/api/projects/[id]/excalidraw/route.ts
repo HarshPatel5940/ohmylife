@@ -3,6 +3,7 @@ import { excalidrawDrawings } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/server-auth";
 
 // Empty Excalidraw drawing structure
 const createEmptyDrawing = () => ({
@@ -62,6 +63,9 @@ export async function POST(
         const projectId = parseInt(params.id);
 
         // Generate unique key for R2 storage
+        const currentUser = await getAuthenticatedUser(env);
+        const createdBy = currentUser?.id || 1;
+
         const key = `excalidraw/${projectId}/${Date.now()}-${name}.json`;
 
         // Create empty drawing data
@@ -81,7 +85,7 @@ export async function POST(
                 projectId,
                 name,
                 key,
-                createdBy: 1, // TODO: Get from session
+                createdBy,
             })
             .returning();
 

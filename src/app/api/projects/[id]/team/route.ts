@@ -3,6 +3,7 @@ import { people } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { isAdmin } from "@/lib/server-auth";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -21,6 +22,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
+    const { env } = await getCloudflareContext({ async: true });
+    const userIsAdmin = await isAdmin(env);
+
+    if (!userIsAdmin) {
+      return NextResponse.json(
+        { error: "Only admins can add team members" },
+        { status: 403 }
+      );
+    }
+
     const { personId } = (await request.json()) as { personId: number };
     const projectId = parseInt(params.id);
 
@@ -28,7 +39,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: "Person ID is required" }, { status: 400 });
     }
 
-    const { env } = await getCloudflareContext({ async: true });
     const db = getDb(env);
 
     const updatedPerson = await db

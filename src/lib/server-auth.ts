@@ -43,3 +43,13 @@ export async function getAuthenticatedUser(env: any) {
     return null;
   }
 }
+
+export async function isAdmin(env: any): Promise<boolean> {
+  const user = await getAuthenticatedUser(env);
+  return user?.role === "admin";
+}
+
+export async function isAuthenticated(env: any): Promise<boolean> {
+  const user = await getAuthenticatedUser(env);
+  return user !== null;
+}

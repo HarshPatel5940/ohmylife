@@ -13,11 +13,6 @@ const Excalidraw = dynamic(
     { ssr: false }
 );
 
-const exportToBlob = dynamic(
-    async () => (await import("@excalidraw/excalidraw")).exportToBlob,
-    { ssr: false }
-);
-
 interface ExcalidrawEditorProps {
     projectId: number;
     drawingId: number;
@@ -33,11 +28,9 @@ export function ExcalidrawEditor({
     const [drawingData, setDrawingData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [exporting, setExporting] = useState(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const excalidrawAPIRef = useRef<any>(null);
 
-    // Load drawing data
     useEffect(() => {
         const loadDrawing = async () => {
             try {
@@ -45,8 +38,19 @@ export function ExcalidrawEditor({
                     `/api/projects/${projectId}/excalidraw/${drawingId}`
                 );
                 if (res.ok) {
-                    const data = await res.json() as { data: any };
-                    setDrawingData(data.data);
+                    const response = await res.json() as { data: any };
+                    const data = response.data;
+
+                    const drawingData = {
+                        elements: data?.elements || [],
+                        appState: {
+                            ...(data?.appState || {}),
+                            collaborators: data?.appState?.collaborators || [],
+                        },
+                        files: data?.files || {},
+                    };
+
+                    setDrawingData(drawingData);
                 } else {
                     toast.error("Failed to load drawing");
                 }
@@ -61,7 +65,6 @@ export function ExcalidrawEditor({
         loadDrawing();
     }, [projectId, drawingId]);
 
-    // Save drawing to API
     const saveDrawing = useCallback(
         async (data: any) => {
             try {
@@ -90,32 +93,30 @@ export function ExcalidrawEditor({
         [projectId, drawingId]
     );
 
-    // Debounced auto-save on change
     const handleChange = useCallback(
         (elements: any, appState: any, files: any) => {
+            const { collaborators, ...cleanAppState } = appState || {};
+
             const data = {
                 type: "excalidraw",
                 version: 2,
                 source: "ohmylife",
                 elements,
-                appState,
+                appState: cleanAppState,
                 files,
             };
 
-            // Clear existing timeout
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
             }
 
-            // Set new timeout for auto-save (3 seconds)
             saveTimeoutRef.current = setTimeout(() => {
                 saveDrawing(data);
-            }, 3000);
+            }, 10000);
         },
         [saveDrawing]
     );
 
-    // Manual save
     const handleManualSave = async () => {
         if (!excalidrawAPIRef.current) return;
 
@@ -123,82 +124,18 @@ export function ExcalidrawEditor({
         const appState = excalidrawAPIRef.current.getAppState();
         const files = excalidrawAPIRef.current.getFiles();
 
+        const { collaborators, ...cleanAppState } = appState || {};
+
         const data = {
             type: "excalidraw",
             version: 2,
             source: "ohmylife",
             elements,
-            appState,
+            appState: cleanAppState,
             files,
         };
 
         await saveDrawing(data);
-    };
-
-    // Export to PNG
-    const handleExportPNG = async () => {
-        if (!excalidrawAPIRef.current || !exportToBlob) return;
-
-        try {
-            setExporting(true);
-            const elements = excalidrawAPIRef.current.getSceneElements();
-            const appState = excalidrawAPIRef.current.getAppState();
-            const files = excalidrawAPIRef.current.getFiles();
-
-            const blob = await (exportToBlob as any)({
-                elements,
-                appState,
-                files,
-                mimeType: "image/png",
-            });
-
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${drawingName}.png`;
-            a.click();
-            URL.revokeObjectURL(url);
-
-            toast.success("Exported to PNG");
-        } catch (error) {
-            console.error("Failed to export:", error);
-            toast.error("Failed to export");
-        } finally {
-            setExporting(false);
-        }
-    };
-
-    // Export to SVG
-    const handleExportSVG = async () => {
-        if (!excalidrawAPIRef.current || !exportToBlob) return;
-
-        try {
-            setExporting(true);
-            const elements = excalidrawAPIRef.current.getSceneElements();
-            const appState = excalidrawAPIRef.current.getAppState();
-            const files = excalidrawAPIRef.current.getFiles();
-
-            const blob = await (exportToBlob as any)({
-                elements,
-                appState,
-                files,
-                mimeType: "image/svg+xml",
-            });
-
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${drawingName}.svg`;
-            a.click();
-            URL.revokeObjectURL(url);
-
-            toast.success("Exported to SVG");
-        } catch (error) {
-            console.error("Failed to export:", error);
-            toast.error("Failed to export");
-        } finally {
-            setExporting(false);
-        }
     };
 
     if (loading) {
@@ -211,7 +148,6 @@ export function ExcalidrawEditor({
 
     return (
         <div className="h-screen flex flex-col">
-            {/* Toolbar */}
             <div className="border-b bg-white dark:bg-gray-900 px-4 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Button
@@ -241,28 +177,9 @@ export function ExcalidrawEditor({
                         <Save className="h-4 w-4 mr-2" />
                         Save
                     </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleExportPNG}
-                        disabled={exporting}
-                    >
-                        <Download className="h-4 w-4 mr-2" />
-                        PNG
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleExportSVG}
-                        disabled={exporting}
-                    >
-                        <Download className="h-4 w-4 mr-2" />
-                        SVG
-                    </Button>
                 </div>
             </div>
 
-            {/* Excalidraw Canvas */}
             <div className="flex-1">
                 <Excalidraw
                     initialData={drawingData}

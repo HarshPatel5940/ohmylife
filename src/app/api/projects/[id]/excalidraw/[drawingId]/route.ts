@@ -3,6 +3,7 @@ import { excalidrawDrawings } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { isAdmin } from "@/lib/server-auth";
 
 export async function GET(
     request: Request,
@@ -68,7 +69,6 @@ export async function PUT(
         const projectId = parseInt(params.id);
         const drawingId = parseInt(params.drawingId);
 
-        // Get drawing metadata
         const drawing = await db
             .select()
             .from(excalidrawDrawings)
@@ -164,9 +164,34 @@ export async function DELETE(
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: { id: string; drawingId: string } }
+) {
+    try {
+        const { env } = await getCloudflareContext({ async: true });
+        const db = getDb(env);
+        const userIsAdmin = await isAdmin(env);
+
+        if (!userIsAdmin) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const drawingId = parseInt(params.drawingId);
+        const { isPrivate } = await request.json() as { isPrivate: boolean };
+
+        await db
+            .update(excalidrawDrawings)
+            .set({ isPrivate })
+            .where(eq(excalidrawDrawings.id, drawingId));
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
