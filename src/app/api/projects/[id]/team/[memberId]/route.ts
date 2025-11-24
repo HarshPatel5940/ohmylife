@@ -30,7 +30,6 @@ export async function DELETE(
       })
       .where(eq(people.id, memberId));
 
-    // Invalidate team cache
     await invalidateTeamCache(env, projectId);
 
     return NextResponse.json({ success: true });

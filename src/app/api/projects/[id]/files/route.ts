@@ -17,7 +17,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const userIsAdmin = await isAdmin(env);
 
-    // Cache file/drawing lists
     const allItems = await getOrCache(
       env,
       CacheKeys.projectFiles(projectId, typeFilter),
@@ -47,7 +46,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
         if (!typeFilter || typeFilter === "all" || typeFilter === "drawings") {
           const drawingConditions = userIsAdmin
             ? eq(excalidrawDrawings.projectId, projectId)
-            : and(eq(excalidrawDrawings.projectId, projectId), eq(excalidrawDrawings.isPrivate, false));
+            : and(
+                eq(excalidrawDrawings.projectId, projectId),
+                eq(excalidrawDrawings.isPrivate, false)
+              );
 
           const projectDrawings = await db
             .select()
@@ -115,7 +117,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
       })
       .returning();
 
-    // Invalidate file cache
     const { invalidateFileCache } = await import("@/lib/cache");
     await invalidateFileCache(env, projectId);
 
@@ -125,4 +126,3 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

@@ -26,7 +26,6 @@ export async function DELETE(
 
     await db.delete(files).where(eq(files.id, fileId));
 
-    // Invalidate file cache
     await invalidateFileCache(env, projectId);
 
     return NextResponse.json({ success: true });
@@ -55,7 +54,6 @@ export async function PATCH(
 
     await db.update(files).set({ isPrivate }).where(eq(files.id, fileId));
 
-    // Invalidate file cache
     await invalidateFileCache(env, projectId);
 
     return NextResponse.json({ success: true });

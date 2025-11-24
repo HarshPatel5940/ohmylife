@@ -42,7 +42,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
       }
     }
 
-    // Cache project metadata
     const project = await getOrCache(
       env,
       CacheKeys.projectMetadata(id),
@@ -134,7 +133,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       .where(eq(projects.id, id))
       .returning();
 
-    // Invalidate project cache
     const { invalidateProjectCache } = await import("@/lib/cache");
     await invalidateProjectCache(env, id);
 

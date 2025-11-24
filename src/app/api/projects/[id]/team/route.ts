@@ -12,7 +12,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const { env } = await getCloudflareContext({ async: true });
     const db = getDb(env);
 
-    // Cache team members list
     const teamMembers = await getOrCache(
       env,
       CacheKeys.projectTeam(projectId),
@@ -56,7 +55,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
       .where(eq(people.id, personId))
       .returning();
 
-    // Invalidate team cache
     await invalidateTeamCache(env, projectId);
 
     return NextResponse.json(updatedPerson[0]);
