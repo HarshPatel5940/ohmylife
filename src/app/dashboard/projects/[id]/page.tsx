@@ -51,6 +51,7 @@ import {
   ProjectNotes,
   ProjectTeam,
   ProjectFiles,
+  ProjectExcalidraw,
 } from "@/components/project";
 
 interface Project {
@@ -125,6 +126,13 @@ interface Note {
   createdAt: string;
 }
 
+interface ExcalidrawDrawing {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 import { Suspense } from "react";
 
 function ProjectDetailsContent() {
@@ -156,6 +164,7 @@ function ProjectDetailsContent() {
   const [files, setFiles] = useState<ProjectFile[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [drawings, setDrawings] = useState<ExcalidrawDrawing[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editProjectOpen, setEditProjectOpen] = useState(false);
@@ -444,6 +453,18 @@ function ProjectDetailsContent() {
     }
   }, [id]);
 
+  const fetchDrawings = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${id}/excalidraw`);
+      if (res.ok) {
+        const data = (await res.json()) as ExcalidrawDrawing[];
+        setDrawings(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch drawings", error);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       fetchProject();
@@ -464,8 +485,9 @@ function ProjectDetailsContent() {
       }
       if (activeTab === "files") fetchFiles();
       if (activeTab === "notes") fetchNotes();
+      if (activeTab === "excalidraw") fetchDrawings();
     }
-  }, [id, activeTab, fetchTasks, fetchTeamMembers, fetchFiles, fetchNotes, fetchPeople]);
+  }, [id, activeTab, fetchTasks, fetchTeamMembers, fetchFiles, fetchNotes, fetchPeople, fetchDrawings]);
 
   const openEditDialog = () => {
     if (!project) return;
@@ -704,7 +726,7 @@ function ProjectDetailsContent() {
       {/* Tabs */}
       <div className="w-full">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="w-full grid grid-cols-3 md:grid-cols-6 gap-2 h-auto p-2 bg-muted/50 bg-white rounded-lg ">
+          <TabsList className="w-full grid grid-cols-3 md:grid-cols-7 gap-2 h-auto p-2 bg-muted/50 bg-white rounded-lg ">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
@@ -734,6 +756,12 @@ function ProjectDetailsContent() {
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
             >
               Notes
+            </TabsTrigger>
+            <TabsTrigger
+              value="excalidraw"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2.5"
+            >
+              Excalidraw
             </TabsTrigger>
             <TabsTrigger
               value="chat"
@@ -778,6 +806,14 @@ function ProjectDetailsContent() {
 
           <TabsContent value="notes" className="mt-6">
             <ProjectNotes notes={notes} projectId={project.id} onNotesChange={fetchNotes} />
+          </TabsContent>
+
+          <TabsContent value="excalidraw" className="mt-6">
+            <ProjectExcalidraw
+              drawings={drawings}
+              projectId={project.id}
+              onDrawingsChange={fetchDrawings}
+            />
           </TabsContent>
 
           <TabsContent value="chat" className="mt-6">

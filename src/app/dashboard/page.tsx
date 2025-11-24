@@ -76,8 +76,8 @@ export default function DashboardPage() {
 
   const revenueTrend = stats?.monthlyRevenue
     ? ((stats.monthlyRevenue.current - stats.monthlyRevenue.previous) /
-        stats.monthlyRevenue.previous) *
-      100
+      stats.monthlyRevenue.previous) *
+    100
     : 0;
 
   const totalTasks = stats?.activeTasks || 0;
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                 >
                   <Users className="mr-3 h-4 w-4 text-green-500" />
                   <div className="text-left">
-                    <div className="text-sm font-medium">Add Client</div>
+                    <div className="text-sm font-medium">Add Lead</div>
                   </div>
                 </Button>
               </Link>

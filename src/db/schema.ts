@@ -131,6 +131,16 @@ export const files = sqliteTable("files", {
   ...timestamps,
 });
 
+export const excalidrawDrawings = sqliteTable("excalidraw_drawings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id").references(() => projects.id),
+  name: text("name").notNull(),
+  key: text("key").notNull(),
+  thumbnailKey: text("thumbnail_key"),
+  createdBy: integer("created_by").references(() => users.id),
+  ...timestamps,
+});
+
 export const chatMessages = sqliteTable("chat_messages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   projectId: integer("project_id").references(() => projects.id),

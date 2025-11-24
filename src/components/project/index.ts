@@ -4,3 +4,4 @@ export { ProjectTasks } from "./ProjectTasks";
 export { ProjectNotes } from "./ProjectNotes";
 export { ProjectTeam } from "./ProjectTeam";
 export { ProjectFiles } from "./ProjectFiles";
+export { ProjectExcalidraw } from "./ProjectExcalidraw";
