@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (
-      path.startsWith("/dashboard/sales") &&
+      path.startsWith("/dashboard/finance") &&
       !payload.canAccessFinance &&
       payload.role !== "admin"
     ) {

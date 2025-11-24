@@ -258,7 +258,7 @@ function SalesContent() {
       };
 
       if (editingSale) {
-        const res = await fetch(`/api/sales/${editingSale.id}`, {
+        const res = await fetch(`/api/finance/${editingSale.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -272,7 +272,7 @@ function SalesContent() {
           alert(error.error || "Failed to update transaction");
         }
       } else {
-        const res = await fetch("/api/sales", {
+        const res = await fetch("/api/finance", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -300,7 +300,7 @@ function SalesContent() {
   const handleDelete = async () => {
     if (!saleToDelete) return;
     try {
-      const res = await fetch(`/api/sales/${saleToDelete.id}`, {
+      const res = await fetch(`/api/finance/${saleToDelete.id}`, {
         method: "DELETE",
       });
       if (res.ok) {

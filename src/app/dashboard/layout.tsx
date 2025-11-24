@@ -105,7 +105,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </Link>
                 )}
                 {(currentUser?.role === "admin" || currentUser?.canAccessFinance) && (
-                  <Link href="/dashboard/sales">
+                  <Link href="/dashboard/finance">
                     <TabsTrigger
                       value="sales"
                       className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-none rounded-md px-2 sm:px-3 py-2 gap-1 sm:gap-2"

@@ -116,7 +116,7 @@ export default function DashboardPage() {
                 Review your pending payments to maintain cash flow
               </p>
             </div>
-            <Link href="/dashboard/sales?filter=overdue">
+            <Link href="/dashboard/finance?filter=overdue">
               <Button
                 variant="outline"
                 size="sm"
@@ -180,7 +180,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/dashboard/sales">
+        <Link href="/dashboard/finance">
           <Card className="hover:shadow-md transition-all cursor-pointer h-full border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
@@ -356,7 +356,7 @@ export default function DashboardPage() {
                   </div>
                 </Button>
               </Link>
-              <Link href="/dashboard/sales?new=true">
+              <Link href="/dashboard/finance?new=true">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-auto py-3 px-3"

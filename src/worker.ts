@@ -1,7 +1,4 @@
-// @ts-ignore
 import { default as handler } from "../.open-next/worker.js";
-import { getDb } from "./lib/db";
-import { chatMessages } from "./db/schema";
 import { DurableObject } from "cloudflare:workers";
 
 export class ChatRoom extends DurableObject {

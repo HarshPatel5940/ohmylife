@@ -101,7 +101,7 @@ export default function LandingPage() {
                 className="group w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white text-base sm:text-lg font-bold rounded-full transition-all hover:scale-105 hover:shadow-xl shadow-lg flex items-center justify-center gap-3"
                 style={{ backgroundColor: "#82C915" }}
               >
-                Get Started
+                Login
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
             </a>
