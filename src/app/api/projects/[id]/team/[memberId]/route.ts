@@ -4,6 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/server-auth";
+import { invalidateTeamCache } from "@/lib/cache";
 
 export async function DELETE(
   request: Request,
@@ -14,10 +15,7 @@ export async function DELETE(
     const userIsAdmin = await isAdmin(env);
 
     if (!userIsAdmin) {
-      return NextResponse.json(
-        { error: "Only admins can remove team members" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Only admins can remove team members" }, { status: 403 });
     }
     const projectId = parseInt(params.id);
     const memberId = parseInt(params.memberId);
@@ -31,6 +29,9 @@ export async function DELETE(
         updatedAt: new Date(),
       })
       .where(eq(people.id, memberId));
+
+    // Invalidate team cache
+    await invalidateTeamCache(env, projectId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

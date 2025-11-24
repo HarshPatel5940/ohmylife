@@ -4,6 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/server-auth";
+import { invalidateFileCache } from "@/lib/cache";
 
 export async function GET(
     request: Request,
@@ -15,29 +16,19 @@ export async function GET(
         const projectId = parseInt(params.id);
         const drawingId = parseInt(params.drawingId);
 
-        // Get drawing metadata
         const drawing = await db
             .select()
             .from(excalidrawDrawings)
-            .where(
-                and(
-                    eq(excalidrawDrawings.id, drawingId),
-                    eq(excalidrawDrawings.projectId, projectId)
-                )
-            )
+            .where(and(eq(excalidrawDrawings.id, drawingId), eq(excalidrawDrawings.projectId, projectId)))
             .limit(1);
 
         if (drawing.length === 0) {
             return NextResponse.json({ error: "Drawing not found" }, { status: 404 });
         }
 
-        // Load drawing data from R2
         const object = await env.BUCKET.get(drawing[0].key);
         if (!object) {
-            return NextResponse.json(
-                { error: "Drawing data not found in storage" },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: "Drawing data not found in storage" }, { status: 404 });
         }
 
         const data = await object.text();
@@ -49,10 +40,7 @@ export async function GET(
         });
     } catch (error) {
         console.error(error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
 
@@ -61,7 +49,7 @@ export async function PUT(
     { params }: { params: { id: string; drawingId: string } }
 ) {
     try {
-        const body = await request.json() as { data?: any; name?: string };
+        const body = (await request.json()) as { data?: any; name?: string };
         const { data, name } = body;
 
         const { env } = await getCloudflareContext({ async: true });
@@ -72,19 +60,13 @@ export async function PUT(
         const drawing = await db
             .select()
             .from(excalidrawDrawings)
-            .where(
-                and(
-                    eq(excalidrawDrawings.id, drawingId),
-                    eq(excalidrawDrawings.projectId, projectId)
-                )
-            )
+            .where(and(eq(excalidrawDrawings.id, drawingId), eq(excalidrawDrawings.projectId, projectId)))
             .limit(1);
 
         if (drawing.length === 0) {
             return NextResponse.json({ error: "Drawing not found" }, { status: 404 });
         }
 
-        // Save drawing data to R2
         if (data) {
             await env.BUCKET.put(drawing[0].key, JSON.stringify(data), {
                 httpMetadata: {
@@ -93,7 +75,6 @@ export async function PUT(
             });
         }
 
-        // Update metadata if name changed
         if (name && name !== drawing[0].name) {
             await db
                 .update(excalidrawDrawings)
@@ -103,7 +84,6 @@ export async function PUT(
                 })
                 .where(eq(excalidrawDrawings.id, drawingId));
         } else {
-            // Just update the timestamp
             await db
                 .update(excalidrawDrawings)
                 .set({
@@ -115,10 +95,7 @@ export async function PUT(
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
 
@@ -132,34 +109,26 @@ export async function DELETE(
         const projectId = parseInt(params.id);
         const drawingId = parseInt(params.drawingId);
 
-        // Get drawing metadata
         const drawing = await db
             .select()
             .from(excalidrawDrawings)
-            .where(
-                and(
-                    eq(excalidrawDrawings.id, drawingId),
-                    eq(excalidrawDrawings.projectId, projectId)
-                )
-            )
+            .where(and(eq(excalidrawDrawings.id, drawingId), eq(excalidrawDrawings.projectId, projectId)))
             .limit(1);
 
         if (drawing.length === 0) {
             return NextResponse.json({ error: "Drawing not found" }, { status: 404 });
         }
 
-        // Delete from R2
         await env.BUCKET.delete(drawing[0].key);
 
-        // Delete thumbnail if exists
         if (drawing[0].thumbnailKey) {
             await env.BUCKET.delete(drawing[0].thumbnailKey);
         }
 
-        // Delete from database
-        await db
-            .delete(excalidrawDrawings)
-            .where(eq(excalidrawDrawings.id, drawingId));
+        await db.delete(excalidrawDrawings).where(eq(excalidrawDrawings.id, drawingId));
+
+        // Invalidate file cache
+        await invalidateFileCache(env, projectId);
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -175,6 +144,7 @@ export async function PATCH(
     try {
         const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
+        const projectId = parseInt(params.id);
         const userIsAdmin = await isAdmin(env);
 
         if (!userIsAdmin) {
@@ -182,12 +152,15 @@ export async function PATCH(
         }
 
         const drawingId = parseInt(params.drawingId);
-        const { isPrivate } = await request.json() as { isPrivate: boolean };
+        const { isPrivate } = (await request.json()) as { isPrivate: boolean };
 
         await db
             .update(excalidrawDrawings)
             .set({ isPrivate })
             .where(eq(excalidrawDrawings.id, drawingId));
+
+        // Invalidate file cache
+        await invalidateFileCache(env, projectId);
 
         return NextResponse.json({ success: true });
     } catch (error) {

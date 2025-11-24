@@ -76,8 +76,8 @@ export default function DashboardPage() {
 
   const revenueTrend = stats?.monthlyRevenue
     ? ((stats.monthlyRevenue.current - stats.monthlyRevenue.previous) /
-      stats.monthlyRevenue.previous) *
-    100
+        stats.monthlyRevenue.previous) *
+      100
     : 0;
 
   const totalTasks = stats?.activeTasks || 0;

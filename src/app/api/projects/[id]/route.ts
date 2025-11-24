@@ -4,6 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/server-auth";
+import { getOrCache, CacheKeys, CacheTTL } from "@/lib/cache";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -41,7 +42,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
       }
     }
 
-    const project = await db.select().from(projects).where(eq(projects.id, id)).get();
+    // Cache project metadata
+    const project = await getOrCache(
+      env,
+      CacheKeys.projectMetadata(id),
+      async () => {
+        return await db.select().from(projects).where(eq(projects.id, id)).get();
+      },
+      CacheTTL.projectMetadata
+    );
 
     if (!project || project.deletedAt) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -124,6 +133,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       })
       .where(eq(projects.id, id))
       .returning();
+
+    // Invalidate project cache
+    const { invalidateProjectCache } = await import("@/lib/cache");
+    await invalidateProjectCache(env, id);
 
     return NextResponse.json(updatedProject[0]);
   } catch (error) {

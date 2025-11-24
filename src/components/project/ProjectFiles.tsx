@@ -22,7 +22,7 @@ interface ProjectItem {
   size: number;
   url: string;
   uploadedAt: string;
-  itemType: 'file' | 'drawing';
+  itemType: "file" | "drawing";
   type?: string;
   isPrivate?: boolean;
 }
@@ -34,27 +34,30 @@ interface ProjectFilesProps {
   currentUserRole?: string;
 }
 
-export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole }: ProjectFilesProps) {
+export function ProjectFiles({
+  files,
+  projectId,
+  onFilesChange,
+  currentUserRole,
+}: ProjectFilesProps) {
   const router = useRouter();
-  const [filter, setFilter] = useState<'all' | 'files' | 'drawings'>('all');
+  const [filter, setFilter] = useState<"all" | "files" | "drawings">("all");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ProjectItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // New drawing dialog
   const [createDrawingOpen, setCreateDrawingOpen] = useState(false);
   const [newDrawingName, setNewDrawingName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const isAdmin = currentUserRole === 'admin';
+  const isAdmin = currentUserRole === "admin";
 
-  // Filter items based on selected filter
-  const filteredItems = files.filter(item => {
-    if (filter === 'all') return true;
-    if (filter === 'files') return item.itemType === 'file';
-    if (filter === 'drawings') return item.itemType === 'drawing';
+  const filteredItems = files.filter((item) => {
+    if (filter === "all") return true;
+    if (filter === "files") return item.itemType === "file";
+    if (filter === "drawings") return item.itemType === "drawing";
     return true;
   });
 
@@ -101,7 +104,7 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
       });
 
       if (res.ok) {
-        const drawing = await res.json() as { id: number; name: string };
+        const drawing = (await res.json()) as { id: number; name: string };
         toast.success("Drawing created");
         setCreateDrawingOpen(false);
         setNewDrawingName("");
@@ -128,16 +131,17 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
 
     setDeleting(true);
     try {
-      const endpoint = itemToDelete.itemType === 'drawing'
-        ? `/api/projects/${projectId}/excalidraw/${itemToDelete.id}`
-        : `/api/projects/${projectId}/files/${itemToDelete.id}`;
+      const endpoint =
+        itemToDelete.itemType === "drawing"
+          ? `/api/projects/${projectId}/excalidraw/${itemToDelete.id}`
+          : `/api/projects/${projectId}/files/${itemToDelete.id}`;
 
       const res = await fetch(endpoint, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        toast.success(`${itemToDelete.itemType === 'drawing' ? 'Drawing' : 'File'} deleted`);
+        toast.success(`${itemToDelete.itemType === "drawing" ? "Drawing" : "File"} deleted`);
         setDeleteDialogOpen(false);
         setItemToDelete(null);
         onFilesChange();
@@ -156,9 +160,10 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
     if (!isAdmin) return;
 
     try {
-      const endpoint = item.itemType === 'drawing'
-        ? `/api/projects/${projectId}/excalidraw/${item.id}`
-        : `/api/projects/${projectId}/files/${item.id}`;
+      const endpoint =
+        item.itemType === "drawing"
+          ? `/api/projects/${projectId}/excalidraw/${item.id}`
+          : `/api/projects/${projectId}/files/${item.id}`;
 
       const res = await fetch(endpoint, {
         method: "PATCH",
@@ -167,7 +172,7 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
       });
 
       if (res.ok) {
-        toast.success(`Marked as ${!item.isPrivate ? 'private' : 'public'}`);
+        toast.success(`Marked as ${!item.isPrivate ? "private" : "public"}`);
         onFilesChange();
       } else {
         toast.error("Failed to update privacy");
@@ -179,10 +184,10 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
   };
 
   const openItem = (item: ProjectItem) => {
-    if (item.itemType === 'drawing') {
+    if (item.itemType === "drawing") {
       router.push(`/dashboard/projects/${projectId}/excalidraw/${item.id}`);
     } else {
-      window.open(item.url, '_blank');
+      window.open(item.url, "_blank");
     }
   };
 
@@ -204,7 +209,11 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
             className="hidden"
             id="file-upload"
           />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} variant="outline">
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            variant="outline"
+          >
             <Upload className="h-4 w-4 mr-2" />
             {uploading ? "Uploading..." : "Upload File"}
           </Button>
@@ -218,35 +227,33 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
       {/* Filter Buttons */}
       <div className="flex gap-2">
         <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
+          variant={filter === "all" ? "default" : "outline"}
           size="sm"
-          onClick={() => setFilter('all')}
+          onClick={() => setFilter("all")}
         >
           All ({files.length})
         </Button>
         <Button
-          variant={filter === 'files' ? 'default' : 'outline'}
+          variant={filter === "files" ? "default" : "outline"}
           size="sm"
-          onClick={() => setFilter('files')}
+          onClick={() => setFilter("files")}
         >
-          Files ({files.filter(f => f.itemType === 'file').length})
+          Files ({files.filter((f) => f.itemType === "file").length})
         </Button>
         <Button
-          variant={filter === 'drawings' ? 'default' : 'outline'}
+          variant={filter === "drawings" ? "default" : "outline"}
           size="sm"
-          onClick={() => setFilter('drawings')}
+          onClick={() => setFilter("drawings")}
         >
-          Drawings ({files.filter(f => f.itemType === 'drawing').length})
+          Drawings ({files.filter((f) => f.itemType === "drawing").length})
         </Button>
       </div>
 
       <div className="space-y-2">
         {filteredItems.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-gray-500 mb-4">
-              No {filter === 'all' ? 'items' : filter} yet
-            </p>
-            {filter !== 'files' && (
+            <p className="text-gray-500 mb-4">No {filter === "all" ? "items" : filter} yet</p>
+            {filter !== "files" && (
               <Button onClick={() => setCreateDrawingOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Drawing
@@ -260,7 +267,7 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
               className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 bg-white"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                {item.itemType === 'drawing' ? (
+                {item.itemType === "drawing" ? (
                   <Pencil className="h-5 w-5 text-blue-500 flex-shrink-0" />
                 ) : (
                   <FileIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
@@ -268,20 +275,18 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-medium truncate">{item.name}</p>
-                    {item.isPrivate && (
-                      <Lock className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                    )}
+                    {item.isPrivate && <Lock className="h-4 w-4 text-gray-500 flex-shrink-0" />}
                   </div>
                   <p className="text-xs text-gray-500">
-                    {item.itemType === 'drawing' ? 'Excalidraw Drawing' : formatFileSize(item.size)}
-                    {' • '}
+                    {item.itemType === "drawing" ? "Excalidraw Drawing" : formatFileSize(item.size)}
+                    {" • "}
                     {new Date(item.uploadedAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => openItem(item)}>
-                  {item.itemType === 'drawing' ? (
+                  {item.itemType === "drawing" ? (
                     <>
                       <Pencil className="h-4 w-4" />
                       <span className="ml-1 hidden sm:inline">Edit</span>
@@ -321,9 +326,7 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Drawing</DialogTitle>
-            <DialogDescription>
-              Enter a name for your new Excalidraw drawing.
-            </DialogDescription>
+            <DialogDescription>Enter a name for your new Excalidraw drawing.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -360,9 +363,12 @@ export function ProjectFiles({ files, projectId, onFilesChange, currentUserRole 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete {itemToDelete?.itemType === 'drawing' ? 'Drawing' : 'File'}</DialogTitle>
+            <DialogTitle>
+              Delete {itemToDelete?.itemType === "drawing" ? "Drawing" : "File"}
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{itemToDelete?.name}&quot;? This action cannot be undone.
+              Are you sure you want to delete &quot;{itemToDelete?.name}&quot;? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

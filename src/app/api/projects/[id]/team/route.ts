@@ -4,6 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/server-auth";
+import { getOrCache, CacheKeys, CacheTTL, invalidateTeamCache } from "@/lib/cache";
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -11,7 +12,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const { env } = await getCloudflareContext({ async: true });
     const db = getDb(env);
 
-    const teamMembers = await db.select().from(people).where(eq(people.projectId, projectId));
+    // Cache team members list
+    const teamMembers = await getOrCache(
+      env,
+      CacheKeys.projectTeam(projectId),
+      async () => {
+        return await db.select().from(people).where(eq(people.projectId, projectId));
+      },
+      CacheTTL.teamList
+    );
 
     return NextResponse.json(teamMembers);
   } catch (error) {
@@ -26,10 +35,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const userIsAdmin = await isAdmin(env);
 
     if (!userIsAdmin) {
-      return NextResponse.json(
-        { error: "Only admins can add team members" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Only admins can add team members" }, { status: 403 });
     }
 
     const { personId } = (await request.json()) as { personId: number };
@@ -49,6 +55,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
       })
       .where(eq(people.id, personId))
       .returning();
+
+    // Invalidate team cache
+    await invalidateTeamCache(env, projectId);
 
     return NextResponse.json(updatedPerson[0]);
   } catch (error) {

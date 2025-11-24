@@ -93,7 +93,7 @@ interface ProjectFile {
   type: string;
   url: string;
   uploadedAt: string;
-  itemType: 'file' | 'drawing';
+  itemType: "file" | "drawing";
   isPrivate?: boolean;
 }
 

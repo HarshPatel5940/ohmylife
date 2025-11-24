@@ -1,62 +1,64 @@
 {
-    "$schema": "node_modules/wrangler/config-schema.json",
-    "name": "ohmylife",
-    "main": "src/worker.ts",
-    "routes": [
-        {
-            "pattern": "oml.harshnpatel.in",
-            "custom_domain": true
-        }
-    ],
-    "compatibility_date": "2024-11-01",
-    "compatibility_flags": [
-        "nodejs_compat"
-    ],
-    "assets": {
-        "directory": ".open-next/assets",
-        "binding": "ASSETS"
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ohmylife",
+  "main": "src/worker.ts",
+  "routes": [
+    {
+      "pattern": "oml.harshnpatel.in",
+      "custom_domain": true
+    }
+  ],
+  "compatibility_date": "2024-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ohmylife-db",
+      "database_id": "45d9f231-6e99-4b87-93b9-299051d5bee0",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "ohmylife-files"
     },
-    "d1_databases": [
-        {
-            "binding": "DB",
-            "database_name": "ohmylife-db",
-            "database_id": "45d9f231-6e99-4b87-93b9-299051d5bee0",
-            "migrations_dir": "drizzle"
-        }
-    ],
-    "r2_buckets": [
-        {
-            "binding": "BUCKET",
-            "bucket_name": "ohmylife-files"
-        },
-        {
-            "binding": "NEXT_INC_CACHE_R2_BUCKET",
-            "bucket_name": "ohmylife-files"
-        }
-    ],
-    "observability": {
-        "logs": {
-            "enabled": true,
-            "head_sampling_rate": 1,
-            "invocation_logs": true,
-            "persist": true
-        }
-    },
-    "durable_objects": {
-        "bindings": [
-            {
-                "name": "CHAT_ROOM",
-                "class_name": "ChatRoom",
-                "script_name": "ohmylife"
-            }
-        ]
-    },
-    "migrations": [
-        {
-            "tag": "v1",
-            "new_sqlite_classes": [
-                "ChatRoom"
-            ]
-        }
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "ohmylife-files"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "7c1d7ccc8a0a42918ecbd66b0a457bdf"
+    }
+  ],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CHAT_ROOM",
+        "class_name": "ChatRoom",
+        "script_name": "ohmylife"
+      }
     ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ChatRoom"]
+    }
+  ]
 }

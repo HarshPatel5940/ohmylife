@@ -4,8 +4,8 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/server-auth";
+import { invalidateFileCache } from "@/lib/cache";
 
-// Empty Excalidraw drawing structure
 const createEmptyDrawing = () => ({
     type: "excalidraw",
     version: 2,
@@ -18,10 +18,7 @@ const createEmptyDrawing = () => ({
     files: {},
 });
 
-export async function GET(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
         const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
@@ -36,49 +33,36 @@ export async function GET(
         return NextResponse.json(drawings);
     } catch (error) {
         console.error(error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
 
-export async function POST(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, { params }: { params: { id: string } }) {
     try {
-        const body = await request.json() as { name: string };
+        const body = (await request.json()) as { name: string };
         const { name } = body;
 
         if (!name) {
-            return NextResponse.json(
-                { error: "Name is required" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Name is required" }, { status: 400 });
         }
 
         const { env } = await getCloudflareContext({ async: true });
         const db = getDb(env);
         const projectId = parseInt(params.id);
 
-        // Generate unique key for R2 storage
         const currentUser = await getAuthenticatedUser(env);
         const createdBy = currentUser?.id || 1;
 
         const key = `excalidraw/${projectId}/${Date.now()}-${name}.json`;
 
-        // Create empty drawing data
         const emptyDrawing = createEmptyDrawing();
 
-        // Save to R2
         await env.BUCKET.put(key, JSON.stringify(emptyDrawing), {
             httpMetadata: {
                 contentType: "application/json",
             },
         });
 
-        // Save metadata to database
         const newDrawing = await db
             .insert(excalidrawDrawings)
             .values({
@@ -89,12 +73,12 @@ export async function POST(
             })
             .returning();
 
+        // Invalidate file cache
+        await invalidateFileCache(env, projectId);
+
         return NextResponse.json(newDrawing[0]);
     } catch (error) {
         console.error(error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
