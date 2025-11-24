@@ -128,6 +128,7 @@ interface Note {
 }
 
 import { Suspense } from "react";
+import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover";
 
 function ProjectDetailsContent() {
   const params = useParams();
@@ -149,7 +150,7 @@ function ProjectDetailsContent() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    router.replace(`${pathname}?tab=${value}`, { scroll: false });
+    router.replace(`${pathname}?tab = ${value} `, { scroll: false });
   };
 
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
@@ -817,20 +818,6 @@ function ProjectDetailsContent() {
                                 <span className="text-xs text-gray-500">
                                   {new Date(msg.createdAt).toLocaleTimeString()}
                                 </span>
-                                {currentUser?.id === msg.userId &&
-                                  msg.readBy &&
-                                  msg.readBy.length > 0 && (
-                                    <div
-                                      className="relative group/read"
-                                      title={`Read by ${msg.readBy.map((r) => r.userName).join(", ")}`}
-                                    >
-                                      {msg.readBy.length === 1 ? (
-                                        <Check className="h-3 w-3 text-blue-500" />
-                                      ) : (
-                                        <CheckCheck className="h-3 w-3 text-blue-500" />
-                                      )}
-                                    </div>
-                                  )}
                               </div>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                 <DropdownMenu>
@@ -856,6 +843,48 @@ function ProjectDetailsContent() {
                                         <Edit2 className="h-4 w-4 mr-2" />
                                         Edit
                                       </DropdownMenuItem>
+                                    )}
+                                    {currentUser?.id === msg.userId && msg.readBy && msg.readBy.length > 0 && (
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                            {msg.readBy.length === 1 ? (
+                                              <Check className="h-4 w-4 mr-2 text-blue-500" />
+                                            ) : (
+                                              <CheckCheck className="h-4 w-4 mr-2 text-blue-500" />
+                                            )}
+                                            Read by {msg.readBy.length}
+                                          </DropdownMenuItem>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                          className="w-72 border border-gray-200 rounded-lg shadow-lg bg-white p-4 z-50"
+                                          align="start"
+                                          side="left"
+                                          sideOffset={8}
+                                        >
+                                          <div className="space-y-3">
+                                            <h4 className="font-semibold text-sm text-gray-900 border-b border-gray-100 pb-2">
+                                              Read by {msg.readBy.length} {msg.readBy.length === 1 ? "person" : "people"}
+                                            </h4>
+                                            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                              {msg.readBy.map((reader) => (
+                                                <div
+                                                  key={reader.userId}
+                                                  className="flex items-center justify-between text-sm py-1.5 px-2 rounded hover:bg-gray-50 transition-colors"
+                                                >
+                                                  <span className="font-medium text-gray-700">{reader.userName}</span>
+                                                  <span className="text-xs text-gray-500 ml-2">
+                                                    {new Date(reader.readAt).toLocaleTimeString([], {
+                                                      hour: "2-digit",
+                                                      minute: "2-digit",
+                                                    })}
+                                                  </span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </PopoverContent>
+                                      </Popover>
                                     )}
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
@@ -941,9 +970,10 @@ function ProjectDetailsContent() {
                     )}
                     <div className="flex gap-2">
                       <Input
-                        ref={chatInputRef}
                         placeholder={
-                          replyingTo ? `Reply to ${replyingTo.senderName}...` : "Type a message..."
+                          replyingTo
+                            ? `Replying to ${replyingTo.senderName}...`
+                            : "Type a message..."
                         }
                         value={newMessage}
                         onChange={(e) => {
@@ -951,6 +981,8 @@ function ProjectDetailsContent() {
                           handleTyping();
                         }}
                         onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                        ref={chatInputRef}
+                        className="flex-1"
                       />
                       <Button onClick={handleSendMessage}>
                         <Send className="h-4 w-4" />

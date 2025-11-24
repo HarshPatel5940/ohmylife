@@ -18,6 +18,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
+    if (path === "/dashboard" && payload.role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard/projects", request.url));
+    }
+
     if (
       path.startsWith("/dashboard/leads") &&
       !payload.canAccessLeads &&

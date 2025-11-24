@@ -23,6 +23,8 @@ export async function GET(request: Request) {
       lowPriorityTasks,
       projectTasks,
       personalTasks,
+      allTransactions,
+      pendingInvoicesData,
     ] = await Promise.all([
       db.select({ count: count() }).from(clients),
       db.select({ count: count() }).from(projects).where(isNull(projects.deletedAt)),
@@ -58,7 +60,32 @@ export async function GET(request: Request) {
         .select({ count: count() })
         .from(tasks)
         .where(sql`${tasks.type} = 'personal' AND ${tasks.status} != 'done'`),
+      db.select().from(transactions),
+      db
+        .select()
+        .from(transactions)
+        .where(sql`${transactions.type} = 'income' AND ${transactions.status} != 'paid'`),
     ]);
+
+    // Calculate finance metrics
+    const totalIncome = allTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalExpenses = allTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const netProfit = totalIncome - totalExpenses;
+
+    const incomeCount = allTransactions.filter((t) => t.type === "income").length;
+    const expenseCount = allTransactions.filter((t) => t.type === "expense").length;
+
+    const pendingInvoices = pendingInvoicesData.length;
+    const pendingAmount = pendingInvoicesData.reduce(
+      (sum, t) => sum + (t.amount - (t.amountReceived || 0)),
+      0
+    );
 
     return NextResponse.json({
       totalClients: clientsCount[0].count,
@@ -76,6 +103,13 @@ export async function GET(request: Request) {
         project: projectTasks[0].count,
         personal: personalTasks[0].count,
       },
+      totalIncome,
+      totalExpenses,
+      netProfit,
+      pendingInvoices,
+      pendingAmount,
+      incomeCount,
+      expenseCount,
     });
   } catch (error) {
     console.error("Dashboard API Error:", error);

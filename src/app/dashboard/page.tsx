@@ -37,6 +37,13 @@ interface DashboardStats {
   monthlyRevenue?: { current: number; previous: number };
   overdueInvoices?: number;
   recentActivity?: any[];
+  totalIncome?: number;
+  totalExpenses?: number;
+  netProfit?: number;
+  pendingInvoices?: number;
+  pendingAmount?: number;
+  incomeCount?: number;
+  expenseCount?: number;
 }
 
 export default function DashboardPage() {
@@ -73,15 +80,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  const revenueTrend = stats?.monthlyRevenue
-    ? ((stats.monthlyRevenue.current - stats.monthlyRevenue.previous) /
-        stats.monthlyRevenue.previous) *
-      100
-    : 0;
-
-  const totalTasks = stats?.activeTasks || 0;
-  const completionRate = totalTasks > 0 ? 65 : 0;
 
   return (
     <div className="space-y-8">
@@ -183,31 +181,34 @@ export default function DashboardPage() {
         <Link href="/dashboard/finance">
           <Card className="hover:shadow-md transition-all cursor-pointer h-full border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">Finance Overview</CardTitle>
               <DollarSign className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ₹{(stats?.monthlyRevenue?.current || stats?.totalSales || 0).toLocaleString()}
+              <div
+                className={`text-2xl font-bold ${(stats?.netProfit || 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                ₹{(stats?.netProfit || 0).toLocaleString()}
               </div>
-              <div className="flex items-center gap-1 mt-2">
-                {revenueTrend >= 0 ? (
-                  <>
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span className="text-xs font-medium text-green-600">
-                      +{revenueTrend.toFixed(1)}%
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <TrendingDown className="h-4 w-4 text-red-600" />
-                    <span className="text-xs font-medium text-red-600">
-                      {revenueTrend.toFixed(1)}%
-                    </span>
-                  </>
-                )}
-                <span className="text-xs text-muted-foreground ml-1">vs last month</span>
+              <p className="text-xs text-muted-foreground mt-1">Net Profit</p>
+              <div className="mt-3 space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Income</span>
+                  <span className="font-medium text-green-600">
+                    ₹{(stats?.totalIncome || 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Expenses</span>
+                  <span className="font-medium text-red-600">
+                    ₹{(stats?.totalExpenses || 0).toLocaleString()}
+                  </span>
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {stats?.pendingInvoices || 0} pending invoice I· ₹
+                {(stats?.pendingAmount || 0).toLocaleString()} due
+              </p>
             </CardContent>
           </Card>
         </Link>
