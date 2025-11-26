@@ -3,6 +3,7 @@ import { projects, clients } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull, eq, getTableColumns } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function GET(request: Request) {
   try {
@@ -28,6 +29,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    requireAdmin(request);
+
     const { name, description, clientId, startDate, endDate } = (await request.json()) as any;
 
     if (!name) {
@@ -51,6 +54,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newProject[0]);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error("Projects POST error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

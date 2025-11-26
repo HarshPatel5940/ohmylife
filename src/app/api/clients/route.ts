@@ -3,9 +3,13 @@ import { clients, projects, transactions } from "@/db/schema";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { desc, isNull, eq, and, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function GET(request: Request) {
   try {
+    // Require admin access
+    requireAdmin(request);
+
     const { env } = await getCloudflareContext({ async: true });
     const db = getDb(env);
 
@@ -45,12 +49,18 @@ export async function GET(request: Request) {
 
     return NextResponse.json(clientsWithStats);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    // Require admin access
+    requireAdmin(request);
+
     const { name, email, company, phone } = (await request.json()) as any;
 
     if (!name) {
@@ -72,6 +82,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newClient[0]);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
