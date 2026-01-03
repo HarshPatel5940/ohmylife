@@ -1,4 +1,4 @@
-# OhMyLife
+# OhMyLife - Archiving it...
 
 Agency management made minimal, simple.
 Self-host in minutes. A lean foundation for projects, clients, finances, and tasks.
